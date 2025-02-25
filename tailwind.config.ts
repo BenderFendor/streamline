@@ -9,8 +9,20 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        background: {
+          primary: '#000000',    // Pure black for AMOLED screens
+          secondary: '#0A0A0A',  // Slightly lighter black for cards
+          tertiary: '#141414',   // For hover states
+        },
+        accent: {
+          primary: '#FF3D71',    // Pink/red accent
+          secondary: '#0095FF',  // Blue accent for highlights
+        },
+        text: {
+          primary: '#FFFFFF',    // White text
+          secondary: '#B3B3B3',  // Gray text
+          tertiary: '#6C6C6C',   // Darker gray for less emphasis
+        },
       },
     },
   },

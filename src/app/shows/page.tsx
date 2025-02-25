@@ -91,7 +91,7 @@ export default function ShowsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header section with filters - Sticky positioning for persistent access */}
-      <div className="flex justify-between items-center mb-8 sticky top-0 bg-background-primary z-10 py-4">
+      <div className="flex justify-between items-center mb-8 sticky top-0 bg-background-primary/95 backdrop-blur-md z-10 py-4 px-6 rounded-2xl shadow-lg border border-background-secondary/20">
         <h1 className="text-3xl font-bold text-text-primary">
           {mediaType === 'movie' ? 'Movies' : 'TV Shows'}
         </h1>
@@ -100,7 +100,7 @@ export default function ShowsPage() {
           <select
             value={mediaType}
             onChange={(e) => setMediaType(e.target.value as 'movie' | 'tv')}
-            className="bg-background-tertiary text-text-primary px-4 py-2 rounded-lg border border-background-secondary hover:border-accent-primary focus:border-accent-primary focus:outline-none cursor-pointer"
+            className="bg-background-secondary/90 text-text-primary px-4 py-2 rounded-xl border border-background-secondary/50 hover:border-accent-primary focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/20 focus:outline-none cursor-pointer transition-all duration-300 backdrop-blur-sm"
           >
             <option value="movie">Movies</option>
             <option value="tv">TV Shows</option>
@@ -109,7 +109,7 @@ export default function ShowsPage() {
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="bg-background-tertiary text-text-primary px-4 py-2 rounded-lg border border-background-secondary hover:border-accent-primary focus:border-accent-primary focus:outline-none cursor-pointer"
+            className="bg-background-secondary/90 text-text-primary px-4 py-2 rounded-xl border border-background-secondary/50 hover:border-accent-primary focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/20 focus:outline-none cursor-pointer transition-all duration-300 backdrop-blur-sm"
           >
             <option value="popular">Popular</option>
             <option value="top_rated">Top Rated</option>
@@ -118,39 +118,34 @@ export default function ShowsPage() {
         </div>
       </div>
 
-      {/* Dynamic category title with proper text transformation */}
-      <h2 className="text-xl text-text-secondary mb-6">
-        {category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} {mediaType === 'movie' ? 'Movies' : 'TV Shows'}
-      </h2>
-
       {/* Responsive grid layout with snap scrolling for smooth navigation */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 overflow-y-auto h-[calc(100vh-12rem)] pb-6 snap-y snap-mandatory">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 overflow-y-auto h-[calc(100vh-4rem)] pb-6 snap-y snap-mandatory">
         {/* Inner grid for proper alignment and spacing */}
-        <div className="col-span-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 auto-rows-max">
+        <div className="col-span-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 auto-rows-max min-h-[calc(100vh-4rem)]">
           {shows.map((show, index) => (
             <div
               key={`${show.id}-${index}`}
               ref={index === shows.length - 1 ? lastShowElementRef : undefined}
               onClick={() => router.push(`/shows/${show.id}`)}
-              className="bg-background-secondary rounded-lg overflow-hidden hover:bg-background-tertiary transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer snap-start"
+              className="group bg-background-secondary/80 backdrop-blur-sm rounded-xl overflow-hidden hover:bg-background-tertiary/90 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-accent-primary/20 cursor-pointer snap-start transform-gpu"
             >
               {/* Show poster with fallback for missing images */}
               {show.poster_path ? (
                 <img
                   src={`https://image.tmdb.org/t/p/w500${show.poster_path}`}
                   alt={show.title}
-                  className="w-full aspect-[2/3] object-cover"
+                  className="w-full aspect-[2/3] object-cover transition-transform duration-500 group-hover:scale-105"
                   loading="lazy"
                 />
               ) : (
-                <div className="w-full aspect-[2/3] bg-background-tertiary flex items-center justify-center text-text-secondary">
+                <div className="w-full aspect-[2/3] bg-gradient-to-br from-background-tertiary to-background-secondary flex items-center justify-center text-text-secondary/80">
                   No Image
                 </div>
               )}
               {/* Show details with proper text truncation and spacing */}
-              <div className="p-4">
-                <h3 className="text-text-primary font-medium truncate">{show.title}</h3>
-                <div className="flex justify-between items-center mt-2 text-sm text-text-secondary">
+              <div className="p-4 backdrop-blur-sm bg-background-secondary/50">
+                <h3 className="text-text-primary font-medium truncate group-hover:text-accent-primary transition-colors">{show.title}</h3>
+                <div className="flex justify-between items-center mt-2 text-sm text-text-secondary/80 group-hover:text-text-secondary transition-opacity">
                   <span>{new Date(show.release_date || show.first_air_date || '').getFullYear() || 'N/A'}</span>
                   <span>★ {show.vote_average.toFixed(1)}</span>
                 </div>
