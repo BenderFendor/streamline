@@ -344,7 +344,7 @@ export default function AnimePage() {
 
             {/* Filter dropdown */}
             {showFilters && (
-              <div className="absolute right-0 mt-2 w-72 bg-background-secondary/95 backdrop-blur-sm rounded-xl shadow-lg p-4 z-50">
+              <div className="absolute right-0 mt-2 w-72 bg-background-secondary/95 backdrop-blur-sm rounded-xl shadow-lg p-4 z-[100]">
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-text-secondary mb-1">Sort By</label>
@@ -566,7 +566,7 @@ export default function AnimePage() {
       
       {/* Anime grid with improved snap scrolling */}
       <div 
-        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 snap-y snap-mandatory scroll-pt-6 overflow-y-auto"
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 snap-y snap-mandatory scroll-pt-6 overflow-y-auto relative z-0"
         style={{ 
           scrollSnapType: 'y mandatory', 
           scrollPaddingTop: '1.5rem', 
