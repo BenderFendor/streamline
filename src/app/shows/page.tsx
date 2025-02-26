@@ -137,25 +137,50 @@ export default function ShowsPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header section with filters - Sticky positioning for persistent access */}
-      <div className="flex justify-between items-center mb-8 sticky top-0 bg-background-primary/95 backdrop-blur-md z-10 py-4 px-6 rounded-2xl shadow-lg border border-background-secondary/20">
-        <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-bold text-text-primary">
-            {mediaType === 'movie' ? 'Movies' : 'TV Shows'}
-          </h1>
-          
-          {/* Watchlist navigation button */}
+      {/* Main navigation bar */}
+      <div className="mb-6 flex justify-between items-center bg-background-secondary/50 backdrop-blur-md p-3 rounded-xl shadow-md">
+        <div className="flex items-center gap-1.5 sm:gap-3">
+          <button
+            onClick={() => router.push('/')}
+            className="px-2 sm:px-3 py-1.5 rounded-lg hover:bg-background-tertiary/50 transition-colors flex items-center gap-1.5"
+            aria-label="Home"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+            </svg>
+            <span className="hidden sm:inline">Home</span>
+          </button>
+          <button
+            onClick={() => router.push('/shows')}
+            className="px-2 sm:px-3 py-1.5 rounded-lg bg-accent-primary/20 text-accent-primary font-medium transition-colors flex items-center gap-1.5"
+            aria-label="Shows"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm3 2h6v4H7V5zm8 8v2h1v-2h-1zm-2-2H7v4h6v-4zm2 0h1V9h-1v2zm1-4V5h-1v2h1zM5 5v2H4V5h1zm0 4H4v2h1V9zm-1 4h1v2H4v-2z" clipRule="evenodd" />
+            </svg>
+            <span className="hidden sm:inline">Shows</span>
+          </button>
+          <button
+            onClick={() => router.push('/anime')}
+            className="px-2 sm:px-3 py-1.5 rounded-lg hover:bg-background-tertiary/50 transition-colors flex items-center gap-1.5"
+            aria-label="Anime"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
+            </svg>
+            <span className="hidden sm:inline">Anime</span>
+          </button>
           <button
             onClick={() => router.push('/watchlist')}
-            className="flex items-center gap-2 bg-accent-primary/90 text-background-primary px-4 py-2 rounded-xl hover:bg-accent-primary transition-colors duration-300"
+            className="px-2 sm:px-3 py-1.5 rounded-lg hover:bg-background-tertiary/50 transition-colors flex items-center gap-1.5"
+            aria-label="Watchlist"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
             </svg>
-            My Watchlist
+            <span className="hidden sm:inline">Watchlist</span>
           </button>
         </div>
-        
         <div className="flex gap-4">
           {/* Media type selector with hover and focus states */}
           <select
@@ -178,7 +203,7 @@ export default function ShowsPage() {
           </select>
         </div>
       </div>
-
+      
       {/* Responsive grid layout with snap scrolling for smooth navigation */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 overflow-y-auto h-[calc(100vh-4rem)] pb-6 snap-y snap-mandatory">
         {/* Inner grid for proper alignment and spacing */}

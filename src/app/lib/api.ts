@@ -704,3 +704,42 @@ export async function fetchWatchlist(): Promise<WatchlistItem[]> {
     return [];
   }
 }
+
+// Fetch details for a specific show (movie or TV)
+export async function fetchShowDetails(id: string | number): Promise<any> {
+  // Try movie first
+  try {
+    const movieResponse = await fetch(
+      `${TMDB_BASE_URL}/movie/${id}?append_to_response=credits,videos,similar`,
+      tmdbFetchOptions
+    );
+
+    // If not found as movie, try TV show
+    if (movieResponse.status === 404) {
+      const tvResponse = await fetch(
+        `${TMDB_BASE_URL}/tv/${id}?append_to_response=credits,videos,similar`,
+        tmdbFetchOptions
+      );
+
+      if (!tvResponse.ok) {
+        throw new Error(`Failed to fetch TV show: ${tvResponse.status}`);
+      }
+
+      const tvData = await tvResponse.json();
+      return {
+        ...tvData,
+        title: tvData.name,
+        release_date: tvData.first_air_date,
+      };
+    }
+
+    if (!movieResponse.ok) {
+      throw new Error(`Failed to fetch movie: ${movieResponse.status}`);
+    }
+
+    return await movieResponse.json();
+  } catch (error) {
+    console.error('Error fetching show details:', error);
+    throw error;
+  }
+}

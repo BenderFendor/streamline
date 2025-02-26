@@ -54,8 +54,8 @@ export default function AnimePage() {
   const { formats, statuses, sorts, genres } = getAnimeFilters();
   
   // Observer for infinite scrolling
-  const observer = useRef<IntersectionObserver>();
-  const lastAnimeElementRef = useCallback((node) => {
+  const observer = useRef<IntersectionObserver | undefined>();
+  const lastAnimeElementRef = useCallback((node: HTMLElement | null) => {
     if (loading) return;
     if (observer.current) observer.current.disconnect();
     observer.current = new IntersectionObserver(entries => {
@@ -252,162 +252,182 @@ export default function AnimePage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Improved Header with filters */}
-      <div 
-        className={`mb-6 sticky top-0 z-10 bg-background-primary/95 backdrop-blur-md p-4 rounded-xl shadow-lg border border-background-secondary/20 transition-transform duration-300 ${
-          headerVisible ? 'translate-y-0' : '-translate-y-full'
-        }`}
-      >
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <h1 className="text-3xl font-bold text-text-primary">Anime</h1>
-            
-            {/* Watchlist navigation button */}
-            <button
-              onClick={() => router.push('/watchlist')}
-              className="flex items-center gap-2 bg-accent-primary/90 text-background-primary px-4 py-2 rounded-xl hover:bg-accent-primary transition-colors duration-300"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
-              </svg>
-              My Watchlist
-            </button>
-          </div>
-          
-          {/* Search bar - simplified and improved */}
-          <form onSubmit={handleSearch} className="flex-1 max-w-md mx-4">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search anime..."
-                className="w-full p-2 pl-10 rounded-lg bg-background-secondary/90 text-text-primary border border-background-secondary/50 hover:border-accent-primary focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/20"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-              />
-              <button 
-                type="submit"
-                className="absolute inset-y-0 left-0 px-3 flex items-center text-text-secondary hover:text-accent-primary"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </button>
-            </div>
-          </form>
-          
-          {/* Improved Filter toggle button */}
-          <button 
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 bg-background-secondary/90 text-text-primary px-4 py-2 rounded-xl hover:bg-background-tertiary transition-all duration-300"
+      {/* Main navigation bar */}
+      <div className="mb-6 flex justify-between items-center bg-background-secondary/50 backdrop-blur-md p-3 rounded-xl shadow-md">
+        <div className="flex items-center gap-1.5 sm:gap-3">
+          <button
+            onClick={() => router.push('/')}
+            className="px-2 sm:px-3 py-1.5 rounded-lg hover:bg-background-tertiary/50 transition-colors flex items-center gap-1.5"
+            aria-label="Home"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
             </svg>
-            <span>Filters</span>
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className={`h-4 w-4 transition-transform duration-300 ${showFilters ? 'rotate-180' : ''}`} 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <span className="hidden sm:inline">Home</span>
+          </button>
+          <button
+            onClick={() => router.push('/shows')}
+            className="px-2 sm:px-3 py-1.5 rounded-lg hover:bg-background-tertiary/50 transition-colors flex items-center gap-1.5"
+            aria-label="Shows"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm3 2h6v4H7V5zm8 8v2h1v-2h-1zm-2-2H7v4h6v-4zm2 0h1V9h-1v2zm1-4V5h-1v2h1zM5 5v2H4V5h1zm0 4H4v2h1V9zm-1 4h1v2H4v-2z" clipRule="evenodd" />
             </svg>
+            <span className="hidden sm:inline">Shows</span>
+          </button>
+          <button
+            onClick={() => router.push('/anime')}
+            className="px-2 sm:px-3 py-1.5 rounded-lg bg-accent-primary/20 text-accent-primary font-medium transition-colors flex items-center gap-1.5"
+            aria-label="Anime"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
+            </svg>
+            <span className="hidden sm:inline">Anime</span>
+          </button>
+          <button
+            onClick={() => router.push('/watchlist')}
+            className="px-2 sm:px-3 py-1.5 rounded-lg hover:bg-background-tertiary/50 transition-colors flex items-center gap-1.5"
+            aria-label="Watchlist"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+            </svg>
+            <span className="hidden sm:inline">Watchlist</span>
           </button>
         </div>
-        
-        {/* Collapsible filters section */}
-        {showFilters && (
-          <div className="mt-4 p-4 bg-background-secondary/40 backdrop-blur-md rounded-lg border border-background-secondary/30 animate-fadeIn">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-              {/* Sort */}
-              <div>
-                <label className="block text-sm mb-1 text-text-secondary">Sort by</label>
-                <select 
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value)}
-                  className="w-full p-2 rounded-lg bg-background-secondary/80 text-text-primary border border-background-secondary/50 hover:border-accent-primary focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/20"
-                >
-                  {Object.entries(sorts).map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))}
-                </select>
-              </div>
-              
-              {/* Format */}
-              <div>
-                <label className="block text-sm mb-1 text-text-secondary">Format</label>
-                <select 
-                  value={format}
-                  onChange={(e) => setFormat(e.target.value)}
-                  className="w-full p-2 rounded-lg bg-background-secondary/80 text-text-primary border border-background-secondary/50 hover:border-accent-primary focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/20"
-                >
-                  <option value="">All Formats</option>
-                  {Object.entries(formats).map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))}
-                </select>
-              </div>
-              
-              {/* Status */}
-              <div>
-                <label className="block text-sm mb-1 text-text-secondary">Status</label>
-                <select 
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="w-full p-2 rounded-lg bg-background-secondary/80 text-text-primary border border-background-secondary/50 hover:border-accent-primary focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/20"
-                >
-                  <option value="">All Statuses</option>
-                  {Object.entries(statuses).map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))}
-                </select>
-              </div>
-              
-              {/* Genre */}
-              <div>
-                <label className="block text-sm mb-1 text-text-secondary">Genre</label>
-                <select 
-                  value={genre}
-                  onChange={(e) => setGenre(e.target.value)}
-                  className="w-full p-2 rounded-lg bg-background-secondary/80 text-text-primary border border-background-secondary/50 hover:border-accent-primary focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/20"
-                >
-                  <option value="">All Genres</option>
-                  {genres.map(g => (
-                    <option key={g} value={g}>{g}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            
-            <div className="flex justify-end gap-3">
-              {/* Reset button */}
-              <button
-                onClick={() => {
-                  setSearch('');
-                  setSearchInput('');
-                  setFormat('');
-                  setStatus('');
-                  setGenre('');
-                  setSort('TRENDING_DESC');
-                  loadAnime(true);
-                  setShowFilters(false);
-                }}
-                className="border border-accent-primary/50 text-accent-primary px-4 py-2 rounded-lg hover:bg-accent-primary hover:text-white transition-all duration-300"
+        <div className="flex items-center gap-4">
+          {/* Search bar */}
+          <form onSubmit={handleSearch} className="relative hidden sm:block">
+            <input
+              type="text"
+              placeholder="Search anime..."
+              className="w-60 p-2 pl-10 rounded-lg bg-background-secondary/90 text-text-primary border border-background-secondary/50 hover:border-accent-primary focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/20"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
+            <button 
+              type="submit"
+              className="absolute inset-y-0 left-0 px-3 flex items-center text-text-secondary hover:text-accent-primary"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+          </form>
+
+          {/* Filter toggle and dropdown */}
+          <div className="relative">
+            <button 
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 bg-background-secondary/90 text-text-primary px-4 py-2 rounded-xl hover:bg-background-tertiary transition-all duration-300"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              <span>Filters</span>
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className={`h-4 w-4 transition-transform duration-300 ${showFilters ? 'rotate-180' : ''}`} 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
               >
-                Reset Filters
-              </button>
-              
-              {/* Apply filters button */}
-              <button
-                onClick={applyFilters}
-                className="bg-accent-primary hover:bg-accent-primary/80 text-white px-4 py-2 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
-              >
-                Apply Filters
-              </button>
-            </div>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Filter dropdown */}
+            {showFilters && (
+              <div className="absolute right-0 mt-2 w-72 bg-background-secondary/95 backdrop-blur-sm rounded-xl shadow-lg p-4 z-20">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-1">Sort By</label>
+                    <select
+                      value={sort}
+                      onChange={(e) => setSort(e.target.value)}
+                      className="w-full bg-background-tertiary/50 rounded-lg p-2 text-text-primary"
+                    >
+                      {Object.entries(sorts).map(([value, label]) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-1">Format</label>
+                    <select
+                      value={format}
+                      onChange={(e) => setFormat(e.target.value)}
+                      className="w-full bg-background-tertiary/50 rounded-lg p-2 text-text-primary"
+                    >
+                      <option value="">All Formats</option>
+                      {Object.entries(formats).map(([value, label]) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-1">Status</label>
+                    <select
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                      className="w-full bg-background-tertiary/50 rounded-lg p-2 text-text-primary"
+                    >
+                      <option value="">All Status</option>
+                      {Object.entries(statuses).map(([value, label]) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-1">Genre</label>
+                    <select
+                      value={genre}
+                      onChange={(e) => setGenre(e.target.value)}
+                      className="w-full bg-background-tertiary/50 rounded-lg p-2 text-text-primary"
+                    >
+                      <option value="">All Genres</option>
+                      {genres.map((g) => (
+                        <option key={g} value={g}>{g}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <button
+                    onClick={applyFilters}
+                    className="w-full bg-accent-primary hover:bg-accent-primary/90 text-text-primary py-2 rounded-lg transition-colors"
+                  >
+                    Apply Filters
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
+      </div>
+      
+      {/* Mobile search bar */}
+      <div className="sm:hidden mb-4">
+        <form onSubmit={handleSearch} className="relative">
+          <input
+            type="text"
+            placeholder="Search anime..."
+            className="w-full p-2 pl-10 rounded-lg bg-background-secondary/90 text-text-primary border border-background-secondary/50 hover:border-accent-primary focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/20"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
+          <button 
+            type="submit"
+            className="absolute inset-y-0 left-0 px-3 flex items-center text-text-secondary hover:text-accent-primary"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+        </form>
       </div>
       
       {/* Error message */}

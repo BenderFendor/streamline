@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import { fetchShowDetails } from '../../lib/api';
 
 type ShowDetails = {
   id: number;
@@ -57,82 +58,50 @@ export default function ShowDetailsPage() {
   const router = useRouter();
   const [show, setShow] = useState<ShowDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchShowDetails = async () => {
-      if (!process.env.NEXT_PUBLIC_TMDB_API_KEY) {
-        console.error('TMDB API key is not configured');
+    const loadShowDetails = async () => {
+      if (!params?.id) {
+        setError('Invalid show ID');
         setIsLoading(false);
         return;
       }
 
       try {
-        // Try fetching as a movie first
-        let response = await fetch(
-          `https://api.themoviedb.org/3/movie/${params.id}?language=en-US&append_to_response=credits,videos,similar`,
-          { 
-            headers: { 
-              'accept': 'application/json',
-              'Authorization': `Bearer ${process.env.NEXT_PUBLIC_TMDB_API_KEY}`
-            } 
-          }
-        );
-
-        let data;
-        // If movie fetch fails, try as a TV show
-        if (!response.ok && response.status === 404) {
-          response = await fetch(
-            `https://api.themoviedb.org/3/tv/${params.id}?language=en-US&append_to_response=credits,videos,similar`,
-            { 
-              headers: { 
-                'accept': 'application/json',
-                'Authorization': `Bearer ${process.env.NEXT_PUBLIC_TMDB_API_KEY}`
-              } 
-            }
-          );
-        }
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            console.error('Authentication Error:', {
-              status: response.status,
-              statusText: response.statusText,
-              headers: Object.fromEntries(response.headers.entries()),
-              apiKey: process.env.NEXT_PUBLIC_TMDB_API_KEY ? 'Present' : 'Missing'
-            });
-            throw new Error('Authentication failed - Please check your API key configuration');
-          } else if (response.status === 404) {
-            throw new Error('Show not found');
-          } else {
-            throw new Error(`Failed to fetch show details: ${response.status}`);
-          }
-        }
-
-        data = await response.json();
-        // Normalize the data structure for TV shows
-        const normalizedData = {
-          ...data,
-          title: data.title || data.name, // TV shows use 'name' instead of 'title'
-          release_date: data.release_date || data.first_air_date,
-        };
-        setShow(normalizedData);
+        const data = await fetchShowDetails(params.id);
+        setShow(data);
+        setError(null);
       } catch (error) {
-        console.error('Error fetching show details:', error);
-        setShow(null); // Ensure show is set to null on error
+        console.error('Error loading show details:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load show details');
+        setShow(null);
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (params.id) {
-      fetchShowDetails();
-    }
-  }, [params.id]);
+    loadShowDetails();
+  }, [params?.id]);
 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <h1 className="text-2xl text-text-primary mb-4">{error}</h1>
+        <button
+          onClick={() => router.back()}
+          className="px-4 py-2 bg-accent-primary text-text-primary rounded-lg hover:bg-accent-secondary transition-colors"
+        >
+          Go Back
+        </button>
       </div>
     );
   }
