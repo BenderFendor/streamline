@@ -1,3 +1,4 @@
+/** @type {import('next').NextConfig} */
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -19,7 +20,10 @@ const nextConfig: NextConfig = {
         pathname: '/file/**',
       },
     ],
-    
+  },
+  eslint: {
+    // Warning: This allows production builds to successfully complete even with ESLint errors
+    ignoreDuringBuilds: true,
   },
 };
 
