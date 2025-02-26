@@ -24,6 +24,16 @@ export default {
           tertiary: '#6C6C6C',   // Darker gray for less emphasis
         },
       },
+      keyframes: {
+        fadeOut: {
+          '0%': { opacity: '1' },
+          '70%': { opacity: '1' },
+          '100%': { opacity: '0' },
+        }
+      },
+      animation: {
+        fadeOut: 'fadeOut 2s ease-in-out forwards',
+      }
     },
   },
   plugins: [],

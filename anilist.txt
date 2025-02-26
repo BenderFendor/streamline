@@ -1,0 +1,1172 @@
+================================================
+File: package.json
+================================================
+{
+  "name": "anilist-docs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "docs:dev": "vitepress dev",
+    "docs:build": "vitepress build",
+    "docs:preview": "vitepress preview",
+    "generate:reference": "node scripts/generate-reference.js",
+    "postinstall": "patch-package"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "graphql-markdown": "^7.0.0",
+    "patch-package": "^8.0.0",
+    "radash": "^12.1.0",
+    "vitepress": "^1.3.1"
+  }
+}
+
+================================================
+File: docs/guide/migration/version-1/migrations/all-search.graphql
+================================================
+query ($query: String) {
+  AnimeSearch: Page {
+    media(search: $query, type: ANIME) {
+      id
+      title {
+        userPreferred
+      }
+      coverImage {
+        large
+      }
+    }
+  }
+  MangaSearch: Page {
+    media(search: $query, type: MANGA) {
+      id
+      title {
+        userPreferred
+      }
+      coverImage {
+        large
+      }
+    }
+  }
+  UserSearch: Page {
+    users(search: $query) {
+      id
+      name
+      avatar {
+        large
+      }
+    }
+  }
+  CharacterSearch: Page {
+    characters(search: $query) {
+      id
+      name {
+        first
+        last
+      }
+      image {
+        large
+      }
+    }
+  }
+  StaffSearch: Page {
+    staff(search: $query) {
+      id
+      name {
+        first
+        last
+      }
+      image {
+        large
+      }
+    }
+  }
+  StudioSearch: Page {
+    studios(search: $query) {
+      id
+      name
+    }
+  }
+  ForumSearch: Page {
+    threads (search: $query) {
+      id
+      title
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/character-id-page.graphql
+================================================
+query ($id: Int!) {
+  Character (id: $id) {
+    id
+    name {
+      first
+      last
+      native
+      alternative
+    }
+    description
+    isFavourite
+    image {
+      medium
+      large
+    }
+    media {
+      edges {
+        characterRole
+        voiceActors {
+          id
+          name {
+            first
+            last
+          }
+          language
+        }
+        node {
+          id
+          title {
+            romaji
+            english
+          }
+          # ...
+        }
+      }
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/character-id.graphql
+================================================
+query ($id: Int!) {
+  Character (id: $id) {
+    id
+    name {
+      first
+      last
+      native
+      alternative
+    }
+    description
+    isFavourite
+    image {
+      medium
+      large
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/character-search.graphql
+================================================
+query ($query: String) {
+  Page {
+    characters(search: $query) {
+      id
+      name {
+        first
+        last
+      }
+      image {
+        medium
+        large
+      }
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/genre_list.graphql
+================================================
+{
+  GenreCollection
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/review-id.graphql
+================================================
+query ($id: Int!) {
+  Review(id: $id) {
+    id
+    summary
+    body # (asHtml: true)
+    score
+    rating
+    ratingAmount
+    userRating
+    private
+    createdAt
+    updatedAt
+    media {
+      id
+      title {
+        userPreferred
+      }
+    }
+    user {
+      id
+      name
+      avatar {
+        large
+      }
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/series-id-activity.graphql
+================================================
+# Currently there isn't a activity relation on the MediaType
+
+query ($mediaId: Int) {
+  Page {
+    activities (mediaId: $mediaId, type: MEDIA_LIST, sort: ID_DESC) {
+      ... on ListActivity {
+        id
+        user {
+          id
+          name
+        }
+        media {
+          id
+          
+        }
+      }
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/series-id-airing.graphql
+================================================
+query ($mediaId: Int!) {
+  AiringSchedule(mediaId: $mediaId) {
+    id
+    airingAt
+    timeUntilAiring
+    episode
+    media {
+      id
+      # ...
+    }
+  }
+}
+
+# Alternative
+
+query ($id: Int!, $type: MediaType) {
+  Media(id: $id, type: $type) {
+    id
+    # ...
+    airingSchedule {
+      nodes {
+        id
+        airingAt
+        timeUntilAiring
+        episode
+      }
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/series-id-characters.graphql
+================================================
+query ($id: Int!, $type: MediaType, $page: Int = 1) {
+  Media(id: $id, type: $type) {
+    id
+    characters(page: $page, sort: [ROLE]) {
+      pageInfo {
+        total
+        perPage
+        hasNextPage
+        currentPage
+        lastPage
+      }
+      edges {
+        node {
+          id
+          name {
+            first
+            last
+          }
+          image {
+            medium
+            large
+          }
+        }
+        role
+        voiceActors {
+          id
+          name {
+            first
+            last
+            native
+          }
+          image {
+            medium
+            large
+          }
+          language
+        }
+      }
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/series-id-reviews.graphql
+================================================
+query ($id: Int!) {
+  Page {
+    reviews (mediaId: $id){
+      id
+      summary
+      rating
+      ratingAmount
+      createdAt
+      updatedAt
+      user {
+        id
+        name
+        avatar {
+          large
+        }
+      }
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/series-id.graphql
+================================================
+query ($id: Int!, $type: MediaType) {
+  Media(id: $id, type: $type) {
+    id
+    title {
+      romaji
+      english
+      native
+      userPreferred
+    }
+    startDate {
+      year
+      month
+      day
+    }
+    endDate {
+      year
+      month
+      day
+    }
+    coverImage {
+      large
+      medium
+    }
+    bannerImage
+    format
+    type
+    status
+    episodes
+    chapters
+    volumes
+    season
+    description
+    averageScore
+    meanScore
+    genres
+    synonyms
+    nextAiringEpisode {
+      airingAt
+      timeUntilAiring
+      episode
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/series-search.graphql
+================================================
+query ($query: String, $type: MediaType) {
+  Page {
+    media(search: $query, type: $type) {
+      id
+      title {
+        romaji
+        english
+        native
+      }
+      coverImage {
+        medium
+        large
+      }
+      format
+      type
+      averageScore
+      popularity
+      episodes
+      season
+      hashtag
+      isAdult
+      startDate {
+        year
+        month
+        day
+      }
+      endDate {
+        year
+        month
+        day
+      }
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/serieslist-id.graphql
+================================================
+query ($id: Int!) {
+  MediaList(id: $id) {
+    id
+    score
+    scoreRaw: score(format: POINT_100)
+    progress
+    progressVolumes
+    repeat
+    private
+    priority
+    notes
+    hiddenFromStatusLists
+    startedAt {
+      year
+      month
+      day
+    }
+    completedAt {
+      year
+      month
+      day
+    }
+    updatedAt
+    createdAt
+    media {
+      id
+      title {
+        userPreferred
+      }
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/staff-id.graphql
+================================================
+query ($id: Int!) {
+  Staff(id: $id) {
+    id
+    name {
+      first
+      last
+      native
+    }
+    description
+    language
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/staff-search.graphql
+================================================
+query ($query: String) {
+  Page {
+    staff(search: $query) {
+      id
+      name {
+        first
+        last
+      }
+      image {
+        medium
+        large
+      }
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/studio-id-page.graphql
+================================================
+query ($id: Int!) {
+  Studio(id: $id) {
+    id
+    name
+    isFavourite
+    media {
+      edges {
+        isMainStudio
+        node {
+          id
+          title {
+            romaji
+            english
+          }
+        }
+      }
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/studio-id.graphql
+================================================
+query ($id: Int!) {
+  Studio(id: $id) {
+    id
+    name
+    isFavourite
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/studio-search.graphql
+================================================
+query ($query: String) {
+  Page {
+    studios(search: $query) {
+      id
+      name
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/tags.graphql
+================================================
+{
+  MediaTagCollection {
+    id
+    name
+    description
+    category
+    rank
+    isGeneralSpoiler
+    isAdult
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/user-activity-id-reply.graphql
+================================================
+query ($id: Int!) {
+  Page {
+    activityReplies(activityId: $id) {
+      id
+      text
+      createdAt
+      user {
+        id
+        name
+        avatar {
+          large
+        }
+      }
+      likes {
+        id
+        name
+        avatar {
+          large
+        }
+      }
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/user-airing.graphql
+================================================
+{
+  Page {
+    media (onList: true, status: RELEASING) {
+      id
+      title {
+        userPreferred
+      }
+      nextAiringEpisode {
+        airingAt
+        timeUntilAiring
+        episode
+      }
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/user-id-followers.graphql
+================================================
+query ($id: Int!) {
+  Page {
+    followers(userId: $id) {
+      id
+      name
+      avatar {
+        large
+      }
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/user-id-following.graphql
+================================================
+query ($id: Int!) {
+  Page {
+    following(userId: $id) {
+      id
+      name
+      avatar {
+        large
+      }
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/user-id-serieslist-raw.graphql
+================================================
+query ($id: Int!, $listType: MediaType) {
+  Page {
+    mediaList(userId: $id, type: $listType) {
+      id
+      score
+      scoreRaw: score(format: POINT_100)
+      progress
+      progressVolumes
+      repeat
+      private
+      priority
+      notes
+      hiddenFromStatusLists
+      startedAt {
+        year
+        month
+        day
+      }
+      completedAt {
+        year
+        month
+        day
+      }
+      updatedAt
+      createdAt
+      media {
+        id
+        title {
+          userPreferred
+        }
+      }
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/user-id-serieslist.graphql
+================================================
+query ($id: Int!, $listType: MediaType) {
+  MediaListCollection (userId: $id, type: $listType) {
+    lists {
+      name
+      isCustomList
+      isSplitCompletedList
+      entries {
+        ... mediaListEntry
+      }
+    }
+    user {
+      id
+      name 
+      avatar {
+        large
+      }
+      mediaListOptions {
+        scoreFormat
+        rowOrder
+      }
+    }
+  }
+}
+
+fragment mediaListEntry on MediaList {
+  id
+  score
+  scoreRaw: score (format: POINT_100)
+  progress
+  progressVolumes
+  repeat
+  private
+  priority
+  notes
+  hiddenFromStatusLists
+  startedAt {
+    year
+    month
+    day
+  }
+  completedAt {
+    year
+    month
+    day
+  }
+  updatedAt
+  createdAt
+  media {
+    id
+    title {
+      userPreferred
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/user-id.graphql
+================================================
+query ($id: Int!, $name: String) {
+  User (id: $id, name: $name) {
+    id
+    name
+    about # (asHtml: true)
+    donatorTier
+    isFollowing
+    avatar {
+      large
+      medium
+    }
+    banner
+    unreadNotificationCount
+    options {
+      titleLanguage
+      displayAdultContent
+    }
+    mediaListOptions {
+     	scoreFormat
+    }
+    updatedAt
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/user-search.graphql
+================================================
+query ($query: String) {
+  Page {
+    users(search: $query) {
+      id
+      name
+      avatar {
+        medium
+        large
+      }
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/migration/version-1/migrations/user.graphql
+================================================
+{
+  Viewer {
+    id
+    name
+    avatar {
+      large
+    }
+    unreadNotificationCount
+    donatorTier
+    updatedAt
+    options {
+      titleLanguage
+      displayAdultContent
+    }
+    mediaListOptions {
+      scoreFormat
+    }
+  }
+}
+
+
+================================================
+File: docs/guide/snippets/auth/authenticated-requests/javascript.js
+================================================
+const fetch = require('node-fetch');
+
+var query = `
+{
+  Viewer {
+    id
+    name
+  }
+}
+`;
+const accessToken = getAccessToken();
+
+const url = 'https://graphql.anilist.co',
+	options = {
+		method: 'POST',
+		headers: {
+			'Authorization': 'Bearer ' + accessToken,
+			'Content-Type': 'application/json',
+			'Accept': 'application/json',
+		},
+		body: JSON.stringify({
+			query: query
+		})
+	};
+
+fetch(url, options).then(handleResponse, handleError);
+
+function handleResponse(response) {
+	console.log(response);
+}
+
+================================================
+File: docs/guide/snippets/auth/authenticated-requests/php.php
+================================================
+
+$query = '
+{
+  Viewer {
+    id
+		name
+  }
+}
+';
+$accessToken = getAccessToken();
+
+$http = new GuzzleHttp\Client;
+$response = $http->request('POST', 'https://graphql.anilist.co', [
+    'headers' => [
+        'Authorization' => 'Bearer ' . $accessToken,
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+    ],
+    'json' => [
+        'query' => $query,
+    ]
+]);
+
+$result = json_decode($response->getBody(), true);
+
+================================================
+File: docs/guide/snippets/auth/authorization-code/javascript.js
+================================================
+const fetch = require('node-fetch');
+
+fetch("https://anilist.co/api/v2/oauth/token", {
+	method: "POST",
+	headers: {
+		"Content-Type": "application/json",
+		"Accept": "application/json"
+	},
+	body: JSON.stringify({
+		"grant_type": "authorization_code",
+		"client_id": "{client_id}",
+		"client_secret": "{client_secret}",
+		"redirect_uri": "{redirect_uri}", // http://example.com/callback
+		"code": "{code}", // The Authorization Code received previously
+	})
+}).then(handleResponse);
+
+function handleResponse(response) {
+	if (response.statusCode == 200) {
+		console.log(response.body.access_token);
+	}
+}
+
+================================================
+File: docs/guide/snippets/auth/authorization-code/php.php
+================================================
+$http = new GuzzleHttp\Client;
+
+$response = $http->post('https://anilist.co/api/v2/oauth/token', [
+    'form_params' => [
+        'grant_type' => 'authorization_code',
+        'client_id' => '{client_id}',
+        'client_secret' => '{client_secret}',
+        'redirect_uri' => '{redirect_uri}', // http://example.com/callback
+        'code' => '{code}', // The Authorization code received previously
+    ],
+    'headers' => [
+        'Accept' => 'application/json'
+    ]
+]);
+
+return json_decode($response->getBody())->access_token;
+
+================================================
+File: docs/guide/snippets/graphql/getting-started/php.php
+================================================
+// Here we define our query as a multi-line string
+$query = '
+query ($id: Int) { # Define which variables will be used in the query (id)
+  Media (id: $id, type: ANIME) { # Insert our variables into the query arguments (id) (type: ANIME is hard-coded in the query)
+    id
+    title {
+      romaji
+      english
+      native
+    }
+  }
+}
+';
+
+// Define our query variables and values that will be used in the query request
+$variables = [
+    "id" => 15125
+];
+
+// Make the HTTP Api request
+$http = new GuzzleHttp\Client;
+$response = $http->post('https://graphql.anilist.co', [
+    'json' => [
+        'query' => $query,
+        'variables' => $variables,
+    ]
+]);
+
+================================================
+File: docs/guide/snippets/graphql/getting-started/python.py
+================================================
+# Here we define our query as a multi-line string
+query = '''
+query ($id: Int) { # Define which variables will be used in the query (id)
+  Media (id: $id, type: ANIME) { # Insert our variables into the query arguments (id) (type: ANIME is hard-coded in the query)
+    id
+    title {
+      romaji
+      english
+      native
+    }
+  }
+}
+'''
+
+# Define our query variables and values that will be used in the query request
+variables = {
+    'id': 15125
+}
+
+url = 'https://graphql.anilist.co'
+
+# Make the HTTP Api request
+response = requests.post(url, json={'query': query, 'variables': variables})
+
+================================================
+File: docs/guide/snippets/graphql/mutations/create/php.php
+================================================
+$query = '
+mutation ($listEntryId: Int, $mediaId: Int, $status: MediaListStatus) {
+  SaveMediaListEntry(id: $listEntryId, mediaId: $mediaId, status: $status) {
+    id
+    status
+  }
+}
+';
+
+$variables = [
+    "mediaId" => 1,
+    "status" => "CURRENT"
+];
+
+$http = new GuzzleHttp\Client;
+$response = $http->post('https://graphql.anilist.co', [
+    'json' => [
+        'query' => $query,
+        'variables' => $variables,
+    ]
+]);
+
+================================================
+File: docs/guide/snippets/graphql/mutations/update/php.php
+================================================
+$query = '
+mutation ($listEntryId: Int, $mediaId: Int, $status: MediaListStatus) {
+  SaveMediaListEntry(id: $listEntryId, mediaId: $mediaId, status: $status) {
+    id
+    status
+  }
+}
+';
+
+$variables = [
+    "listEntryId" => 4,
+    "status" => "COMPLETED"
+];
+
+$http = new GuzzleHttp\Client;
+$response = $http->post('https://graphql.anilist.co', [
+    'json' => [
+        'query' => $query,
+        'variables' => $variables,
+    ]
+]);
+
+================================================
+File: docs/guide/snippets/graphql/pagination/javascript.js
+================================================
+var query = `
+query ($id: Int, $page: Int, $perPage: Int, $search: String) {
+  Page (page: $page, perPage: $perPage) {
+    pageInfo {
+      currentPage
+      hasNextPage
+      perPage
+    }
+    media (id: $id, search: $search) {
+      id
+      title {
+        romaji
+      }
+    }
+  }
+}
+`;
+
+var variables = {
+	search: "Fate/Zero",
+	page: 1,
+	perPage: 3
+};
+
+var url = 'https://graphql.anilist.co',
+	options = {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'Accept': 'application/json',
+		},
+		body: JSON.stringify({
+			query: query,
+			variables: variables
+		})
+	};
+
+fetch(url, options).then(handleResponse)
+	.then(handleData)
+	.catch(handleError);
+
+================================================
+File: docs/guide/snippets/graphql/pagination/php.php
+================================================
+$query = '
+query ($id: Int, $page: Int, $perPage: Int, $search: String) {
+  Page (page: $page, perPage: $perPage) {
+    pageInfo {
+      currentPage
+      hasNextPage
+      perPage
+    }
+    media (id: $id, search: $search) {
+      id
+      title {
+        romaji
+      }
+    }
+  }
+}
+';
+
+$variables = [
+    "search" => "Fate/Zero",
+    "page" => 1,
+    "perPage" => 3
+];
+
+$http = new GuzzleHttp\Client;
+$response = $http->post('https://graphql.anilist.co', [
+    'json' => [
+        'query' => $query,
+        'variables' => $variables,
+    ]
+]);
+
+================================================
+File: docs/guide/snippets/graphql/pagination/python.py
+================================================
+query = '''
+query ($id: Int, $page: Int, $perPage: Int, $search: String) {
+    Page (page: $page, perPage: $perPage) {
+        pageInfo {
+            currentPage
+            hasNextPage
+            perPage
+        }
+        media (id: $id, search: $search) {
+            id
+            title {
+                romaji
+            }
+        }
+    }
+}
+'''
+variables = {
+    'search': 'Fate/Zero',
+    'page': 1,
+    'perPage': 3
+}
+url = 'https://graphql.anilist.co'
+
+response = requests.post(url, json={'query': query, 'variables': variables})
+
+================================================
+File: .vitepress/theme/index.ts
+================================================
+// https://vitepress.dev/guide/custom-theme
+import { h } from 'vue'
+import type { Theme } from 'vitepress'
+import DefaultTheme from 'vitepress/theme'
+import './style.css'
+
+export default {
+  extends: DefaultTheme,
+  Layout: () => {
+    return h(DefaultTheme.Layout, null, {
+      // https://vitepress.dev/guide/extending-default-theme#layout-slots
+    })
+  },
+  enhanceApp({ app, router, siteData }) {
+    // ...
+  }
+} satisfies Theme
+
+

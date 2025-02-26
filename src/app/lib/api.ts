@@ -4,6 +4,7 @@
 const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3'
 const JIKAN_BASE_URL = 'https://api.jikan.moe/v4'
+const ANILIST_API_URL = 'https://graphql.anilist.co'
 const OPEN_LIBRARY_BASE_URL = 'https://openlibrary.org'
 
 const tmdbFetchOptions = {
@@ -49,6 +50,44 @@ type ShowsParams = {
   category: string;
   genre?: string;
   query?: string;
+  page: number;
+  id?: string | number;
+}
+
+// Anime Types
+type AnimeResponse = {
+  page: number;
+  total_pages: number;
+  hasNextPage: boolean;
+  results: Array<{
+    id: number;
+    title: string;
+    englishTitle?: string;
+    nativeTitle?: string;
+    coverImage: string;
+    bannerImage?: string;
+    episodes?: number;
+    status: string;
+    format: string;
+    genres: string[];
+    averageScore?: number;
+    popularity?: number;
+    season?: string;
+    year?: number;
+    studios?: string[];
+    nextAiring?: {
+      episode: number;
+      timeUntilAiring: number;
+    };
+  }>;
+}
+
+type AnimeParams = {
+  sort?: string;
+  format?: string;
+  status?: string;
+  search?: string;
+  genre?: string;
   page: number;
 }
 
@@ -102,13 +141,40 @@ export async function getPosterData(): Promise<MediaItem[]> {
     const tvData = await tvResponse.json()
     if (!tvData?.results) throw new Error('Invalid TV data format')
 
-    // Fetch trending anime
-    const animeResponse = await fetch(
-      `${JIKAN_BASE_URL}/top/anime?filter=airing`
-    )
-    if (!animeResponse.ok) throw new Error(`Anime API error: ${animeResponse.status}`)
-    const animeData = await animeResponse.json()
-    if (!animeData?.data) throw new Error('Invalid anime data format')
+    // Fetch trending anime using AniList API
+    const animeQuery = `
+      query {
+        Page(page: 1, perPage: 10) {
+          media(type: ANIME, sort: TRENDING_DESC) {
+            id
+            title {
+              english
+              romaji
+            }
+            coverImage {
+              extraLarge
+            }
+          }
+        }
+      }
+    `;
+
+    const animeResponse = await fetch(ANILIST_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({ query: animeQuery }),
+    });
+
+    if (!animeResponse.ok) {
+      throw new Error(`Anime API error: ${animeResponse.status}`);
+    }
+    const animeData = await animeResponse.json();
+    if (!animeData?.data?.Page?.media) {
+      throw new Error('Invalid anime data format');
+    }
 
     // Process and combine all data
     const movies = movieData.results.map(item => ({
@@ -120,105 +186,497 @@ export async function getPosterData(): Promise<MediaItem[]> {
 
     const tvShows = tvData.results.map(item => ({
       id: item.id,
-      title: item.name,
+      title: item.name || '',
       imageUrl: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
       mediaType: 'tv',
     })) || []
 
-    const anime = animeData.data.map(item => ({
-      id: item.mal_id,
-      title: item.title,
-      imageUrl: item.images?.jpg?.image_url || '',
+    const anime = animeData.data.Page.media.map(item => ({
+      id: item.id,
+      title: item.title.english || item.title.romaji,
+      imageUrl: item.coverImage.extraLarge,
       mediaType: 'anime',
     })) || []
 
-    const combinedResults = [...movies, ...tvShows, ...anime]
-      .filter(item => item.imageUrl) // Filter out items without images
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 15) // Take only 15 random posters
-
-    return combinedResults
+    // Combine and shuffle for varied content
+    const allMedia = [...movies, ...tvShows, ...anime]
+    
+    // Fisher-Yates shuffle algorithm
+    for (let i = allMedia.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [allMedia[i], allMedia[j]] = [allMedia[j], allMedia[i]];
+    }
+    
+    return allMedia
   } catch (error) {
-    console.error("Error fetching poster data:", error)
+    console.error('Error fetching poster data:', error)
     return []
   }
 }
 
 // Fetch shows based on filters and search query
 export async function fetchShows(params: ShowsParams): Promise<ShowsResponse> {
-  const { mediaType, category, genre, query, page } = params
-  const searchParams = new URLSearchParams({
+  const { mediaType, category, genre, query, page, id } = params
+  
+  let url: string
+  let queryParams = new URLSearchParams({
     language: 'en-US',
     page: page.toString(),
-    include_adult: 'false',
+    include_adult: 'false'
   })
-
-  if (query) {
-    searchParams.append('query', query)
-  } else if (genre) {
-    searchParams.append('with_genres', genre)
+  
+  // If an ID is specified, fetch details for that specific show
+  if (id) {
+    url = `${TMDB_BASE_URL}/${mediaType}/${id}`
   }
-
-  const baseUrl = query
-    ? `${TMDB_BASE_URL}/search/${mediaType}`
-    : `${TMDB_BASE_URL}/${mediaType}/${category}`
-  const url = `${baseUrl}?${searchParams.toString()}`
-
+  // If a search query is specified, use search endpoint
+  else if (query) {
+    url = `${TMDB_BASE_URL}/search/${mediaType}`
+    queryParams.append('query', query)
+  }
+  // If genre is specified, use discover endpoint with genre filter
+  else if (genre) {
+    url = `${TMDB_BASE_URL}/discover/${mediaType}`
+    queryParams.append('with_genres', genre)
+  }
+  // Otherwise, use standard category endpoint (popular, top_rated, etc.)
+  else {
+    url = `${TMDB_BASE_URL}/${mediaType}/${category}`
+  }
+  
   try {
-    // Log request details for debugging
-    console.debug('Fetching shows from:', url)
-    console.debug('Using fetch options:', JSON.stringify(tmdbFetchOptions))
+    console.debug(`Fetching shows from: ${url}?${queryParams.toString()}`)
     
-    const response = await fetch(url, tmdbFetchOptions)
+    const response = await fetch(`${url}?${queryParams.toString()}`, tmdbFetchOptions)
     if (!response.ok) {
-      // Log detailed error information for debugging
       const errorText = await response.text()
-      console.error('Shows API Error Details:', {
+      console.error('Shows API Error:', {
         status: response.status,
         statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries()),
-        responseBody: errorText,
-        requestUrl: url
+        responseBody: errorText
       })
-      
-      // Provide specific error messages for common issues
-      if (response.status === 401) {
-        throw new Error('TMDB API authentication failed. Please check your API key.')
-      } else if (response.status === 404) {
-        throw new Error(`The requested ${mediaType} content was not found.`)
-      } else if (response.status === 429) {
-        throw new Error('TMDB API rate limit exceeded. Please try again later.')
-      }
-      
       throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
     }
+    
     const data = await response.json()
     return {
       page: data.page,
       total_pages: data.total_pages,
       total_results: data.total_results,
-      results: data.results.map(item => ({
-        id: item.id,
-        title: mediaType === 'movie' ? item.title : item.name,
-        name: mediaType === 'tv' ? item.name : undefined,
-        poster_path: item.poster_path,
-        backdrop_path: item.backdrop_path,
-        overview: item.overview,
-        genre_ids: item.genre_ids,
-        vote_average: item.vote_average,
-        vote_count: item.vote_count,
-        popularity: item.popularity,
-        release_date: item.release_date,
-        first_air_date: item.first_air_date,
-        original_language: item.original_language,
-        adult: item.adult,
-        media_type: mediaType
-      })),
+      results: data.results || []
     }
   } catch (error) {
-    console.error("Fetch shows error:", error)
-    return { page: 0, total_pages: 0, results: [] }
+    console.error('Fetch shows error:', error)
+    return { page: 0, total_pages: 0, total_results: 0, results: [] }
   }
+}
+
+// Fetch anime based on filters and search query using AniList API
+export async function fetchAnime(params: AnimeParams): Promise<AnimeResponse> {
+  const { sort = 'TRENDING_DESC', format, status, search, genre, page = 1 } = params;
+  
+  // Build the GraphQL query
+  let query = `
+    query ($page: Int, $perPage: Int, $search: String, $format: MediaFormat, $status: MediaStatus, $genre: String, $sort: [MediaSort]) {
+      Page(page: $page, perPage: $perPage) {
+        pageInfo {
+          hasNextPage
+          currentPage
+          total
+          lastPage
+        }
+        media(type: ANIME, search: $search, format: $format, status: $status, genre: $genre, sort: $sort) {
+          id
+          episodes
+          status
+          format
+          genres
+          averageScore
+          popularity
+          season
+          seasonYear
+          studios {
+            nodes {
+              name
+            }
+          }
+          coverImage {
+            large
+            extraLarge
+          }
+          bannerImage
+          nextAiringEpisode {
+            episode
+            timeUntilAiring
+          }
+          title {
+            english
+            romaji
+            native
+          }
+        }
+      }
+    }
+  `;
+  
+  // Build variables object
+  const variables = {
+    page: page,
+    perPage: 20,
+    sort: [sort]
+  };
+  
+  // Add optional filters if they exist
+  if (search) variables['search'] = search;
+  if (format) variables['format'] = format;
+  if (status) variables['status'] = status;
+  if (genre) variables['genre'] = genre;
+
+  try {
+    const response = await fetch(ANILIST_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        variables
+      }),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`AniList API error: ${response.status} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data.errors) {
+      throw new Error(`AniList GraphQL error: ${data.errors[0].message}`);
+    }
+
+    const pageInfo = data.data.Page.pageInfo;
+    const mediaItems = data.data.Page.media;
+    
+    // Transform the data to match our expected format
+    return {
+      page: pageInfo.currentPage,
+      total_pages: pageInfo.lastPage || 500, // AniList typically has a limit
+      hasNextPage: pageInfo.hasNextPage,
+      results: mediaItems.map(item => ({
+        id: item.id,
+        title: item.title.english || item.title.romaji,
+        englishTitle: item.title.english,
+        nativeTitle: item.title.native,
+        coverImage: item.coverImage.extraLarge || item.coverImage.large,
+        bannerImage: item.bannerImage,
+        episodes: item.episodes,
+        status: item.status,
+        format: item.format,
+        genres: item.genres,
+        averageScore: item.averageScore,
+        popularity: item.popularity,
+        season: item.season,
+        year: item.seasonYear,
+        studios: item.studios?.nodes?.map(studio => studio.name) || [],
+        nextAiring: item.nextAiringEpisode ? {
+          episode: item.nextAiringEpisode.episode,
+          timeUntilAiring: item.nextAiringEpisode.timeUntilAiring
+        } : undefined
+      }))
+    };
+  } catch (error) {
+    console.error('Fetch anime error:', error);
+    return { page: 0, total_pages: 0, hasNextPage: false, results: [] };
+  }
+}
+
+// Fetch specific anime details by ID
+export async function fetchAnimeDetails(id: number): Promise<any> {
+  const query = `
+    query ($id: Int) {
+      Media(id: $id, type: ANIME) {
+        id
+        title {
+          romaji
+          english
+          native
+        }
+        description
+        startDate {
+          year
+          month
+          day
+        }
+        endDate {
+          year
+          month
+          day
+        }
+        season
+        seasonYear
+        episodes
+        duration
+        status
+        averageScore
+        meanScore
+        popularity
+        favourites
+        format
+        genres
+        tags {
+          name
+          description
+          category
+          rank
+          isGeneralSpoiler
+          isMediaSpoiler
+          isAdult
+        }
+        studios {
+          edges {
+            node {
+              id
+              name
+              siteUrl
+            }
+            isMain
+          }
+        }
+        staff {
+          edges {
+            node {
+              id
+              name {
+                full
+                native
+              }
+              language
+              primaryOccupations
+              image {
+                large
+              }
+              siteUrl
+            }
+            role
+          }
+        }
+        characters {
+          edges {
+            node {
+              id
+              name {
+                full
+                native
+              }
+              image {
+                large
+              }
+              description
+              siteUrl
+            }
+            role
+            voiceActors(language: JAPANESE) {
+              id
+              name {
+                full
+                native
+              }
+              language
+              image {
+                large
+              }
+              siteUrl
+            }
+          }
+        }
+        relations {
+          edges {
+            node {
+              id
+              title {
+                romaji
+                english
+              }
+              type
+              format
+              status
+              coverImage {
+                large
+              }
+              siteUrl
+            }
+            relationType
+          }
+        }
+        recommendations {
+          edges {
+            node {
+              mediaRecommendation {
+                id
+                title {
+                  romaji
+                  english
+                }
+                format
+                status
+                averageScore
+                popularity
+                coverImage {
+                  large
+                }
+                siteUrl
+              }
+              rating
+              userRating
+            }
+          }
+        }
+        trailer {
+          id
+          site
+          thumbnail
+        }
+        siteUrl
+        nextAiringEpisode {
+          airingAt
+          timeUntilAiring
+          episode
+        }
+        streamingEpisodes {
+          title
+          thumbnail
+          url
+          site
+        }
+        reviews {
+          nodes {
+            id
+            summary
+            rating
+            ratingAmount
+            user {
+              id
+              name
+              avatar {
+                large
+              }
+              siteUrl
+            }
+            siteUrl
+          }
+        }
+        rankings {
+          id
+          rank
+          type
+          format
+          year
+          season
+          allTime
+          context
+        }
+        coverImage {
+          extraLarge
+        }
+        bannerImage
+        externalLinks {
+          id
+          site
+          url
+          type
+          language
+          color
+          icon
+          notes
+          isDisabled
+        }
+        source
+        hashtag
+        updatedAt
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch(ANILIST_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        variables: { id }
+      }),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`AniList API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data.errors) {
+      throw new Error(`AniList GraphQL error: ${data.errors[0].message}`);
+    }
+
+    return data.data.Media;
+  } catch (error) {
+    console.error('Fetch anime details error:', error);
+    throw error;
+  }
+}
+
+// Fetch anime filters to use in the UI
+export function getAnimeFilters() {
+  const formats = {
+    TV: 'TV Show',
+    MOVIE: 'Movie',
+    OVA: 'OVA',
+    ONA: 'ONA',
+    SPECIAL: 'Special',
+    MUSIC: 'Music'
+  };
+  
+  const statuses = {
+    FINISHED: 'Finished',
+    RELEASING: 'Currently Airing',
+    NOT_YET_RELEASED: 'Coming Soon',
+    CANCELLED: 'Cancelled',
+    HIATUS: 'On Hiatus'
+  };
+  
+  const sorts = {
+    TRENDING_DESC: 'Trending',
+    POPULARITY_DESC: 'Popular',
+    SCORE_DESC: 'Top Rated',
+    START_DATE_DESC: 'Newest',
+    EPISODES_DESC: 'Most Episodes',
+    FAVOURITES_DESC: 'Most Favorites'
+  };
+  
+  const genres = [
+    'Action',
+    'Adventure',
+    'Comedy',
+    'Drama',
+    'Fantasy',
+    'Horror',
+    'Mecha',
+    'Music',
+    'Mystery',
+    'Psychological',
+    'Romance',
+    'Sci-Fi',
+    'Slice of Life',
+    'Sports',
+    'Supernatural',
+    'Thriller'
+  ];
+  
+  return { formats, statuses, sorts, genres };
 }
 
 // Watchlist Types

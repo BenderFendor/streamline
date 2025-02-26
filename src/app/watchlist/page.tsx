@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { fetchWatchlist } from '@/app/lib/api';
 
 type WatchlistItem = {
@@ -15,6 +16,7 @@ type WatchlistItem = {
 };
 
 export default function WatchlistPage() {
+  const router = useRouter();
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
   const [filter, setFilter] = useState<'all' | 'movie' | 'tv' | 'anime' | 'book'>('all');
 
@@ -31,28 +33,44 @@ export default function WatchlistPage() {
     : watchlist.filter(item => item.mediaType === filter);
 
   return (
-    <div className="container mx-auto px-4 pt-20">
-      <h1 className="text-3xl font-bold mb-6">My Watchlist</h1>
-      
-      <div className="mb-6">
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value as typeof filter)}
-          className="bg-background-tertiary text-text-primary px-4 py-2 rounded-md"
-        >
-          <option value="all">All</option>
-          <option value="movie">Movies</option>
-          <option value="tv">TV Shows</option>
-          <option value="anime">Anime</option>
-          <option value="book">Books</option>
-        </select>
+    <div className="container mx-auto px-4 pt-8">
+      {/* Header section with navigation and filters */}
+      <div className="flex justify-between items-center mb-8 sticky top-0 bg-background-primary/95 backdrop-blur-md z-10 py-4 px-6 rounded-2xl shadow-lg border border-background-secondary/20">
+        <div className="flex items-center gap-4">
+          <h1 className="text-3xl font-bold text-text-primary">My Watchlist</h1>
+          
+          {/* Browse shows navigation button */}
+          <button
+            onClick={() => router.push('/shows')}
+            className="flex items-center gap-2 bg-accent-primary/90 text-background-primary px-4 py-2 rounded-xl hover:bg-accent-primary transition-colors duration-300"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+            </svg>
+            Browse Shows
+          </button>
+        </div>
+        
+        <div>
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value as typeof filter)}
+            className="bg-background-secondary/90 text-text-primary px-4 py-2 rounded-xl border border-background-secondary/50 hover:border-accent-primary focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/20 focus:outline-none cursor-pointer transition-all duration-300 backdrop-blur-sm"
+          >
+            <option value="all">All</option>
+            <option value="movie">Movies</option>
+            <option value="tv">TV Shows</option>
+            <option value="anime">Anime</option>
+            <option value="book">Books</option>
+          </select>
+        </div>
       </div>
-
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredWatchlist.map((item) => (
           <div
             key={item.id}
-            className="bg-background-secondary rounded-lg overflow-hidden shadow-lg"
+            className="bg-background-secondary rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
           >
             {item.imageUrl && (
               <img
@@ -91,7 +109,7 @@ export default function WatchlistPage() {
 
       {filteredWatchlist.length === 0 && (
         <div className="text-center text-text-secondary py-8">
-          No items in your watchlist
+          No items in your watchlist. <button onClick={() => router.push('/shows')} className="text-accent-primary hover:underline">Browse shows</button> to add some!
         </div>
       )}
     </div>
