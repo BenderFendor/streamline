@@ -1,6 +1,6 @@
 import { fetchShows } from './api';
 
-type WatchlistItem = {
+export type WatchlistItem = {
   id: string;
   title: string;
   mediaType: 'movie' | 'tv' | 'anime' | 'book';
@@ -9,10 +9,28 @@ type WatchlistItem = {
   rating?: number;
   imageUrl?: string;
   totalEpisodes?: number;
+  currentEpisode?: number;
   totalPages?: number;
   genres?: string[];
   creator?: string;
   year?: string;
+};
+
+type TMDBShowData = {
+  id: number;
+  title?: string;
+  name?: string;
+  poster_path: string;
+  backdrop_path: string;
+  overview: string;
+  genre_ids: number[];
+  vote_average: number;
+  vote_count: number;
+  popularity: number;
+  release_date?: string;
+  first_air_date?: string;
+  number_of_episodes?: number;
+  media_type?: 'movie' | 'tv';
 };
 
 type ShowInfo = {
@@ -21,6 +39,7 @@ type ShowInfo = {
   year: string;
   rating: number;
   totalEpisodes?: number;
+  currentEpisode?: number;
 };
 
 export async function getItemInfo(item: WatchlistItem): Promise<ShowInfo> {
@@ -29,22 +48,23 @@ export async function getItemInfo(item: WatchlistItem): Promise<ShowInfo> {
       // Fetch basic show information
       const response = await fetchShows({
         mediaType: item.mediaType,
-        category: 'popular', // This doesn't matter as we're using it just to get the API structure
+        category: 'popular',
         page: 1,
         id: item.mediaId
       });
 
-      const showData = response.results[0];
-
-      // For movies, we could fetch additional credits data to get the director
-      // This would require extending the fetchShows function to support credits endpoint
+      const showData = response.results?.[0] as TMDBShowData | undefined;
+      
+      if (!showData) {
+        throw new Error('Show data not found');
+      }
 
       return {
-        genres: showData.genre_ids.map(String), // We'll need to map these to actual names
+        genres: showData.genre_ids?.map(id => id.toString()) || [],
         creator: 'Unknown', // Would come from credits data
         year: new Date(showData.release_date || showData.first_air_date || '').getFullYear().toString(),
-        rating: showData.vote_average,
-        totalEpisodes: item.mediaType === 'tv' ? showData.number_of_episodes : undefined
+        rating: showData.vote_average || 0,
+        totalEpisodes: showData.number_of_episodes
       };
     } catch (error) {
       console.error('Error fetching show info:', error);

@@ -1,4 +1,5 @@
 // API functions for fetching and managing data
+import type { WatchlistItem } from './watchlist';
 
 // API Base URLs and Keys
 const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY
@@ -679,18 +680,6 @@ export function getAnimeFilters() {
   return { formats, statuses, sorts, genres };
 }
 
-// Watchlist Types
-type WatchlistItem = {
-  id: string;
-  title: string;
-  mediaType: 'movie' | 'tv' | 'anime' | 'book';
-  progress?: number;
-  rating?: number;
-  imageUrl?: string;
-  totalEpisodes?: number;
-  totalPages?: number;
-};
-
 // Fetch watchlist items
 export async function fetchWatchlist(): Promise<WatchlistItem[]> {
   try {
@@ -698,7 +687,8 @@ export async function fetchWatchlist(): Promise<WatchlistItem[]> {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return await response.json();
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Fetch watchlist error:', error);
     return [];

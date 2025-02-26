@@ -1,23 +1,9 @@
 import { NextResponse } from 'next/server';
+import type { WatchlistItem } from '@/app/lib/watchlist';
 import { getItemInfo } from '@/app/lib/watchlist';
 
-type WatchlistItem = {
-  id: string;
-  title: string;
-  mediaType: 'movie' | 'tv' | 'anime' | 'book';
-  mediaId: string;
-  progress?: number;
-  rating?: number;
-  imageUrl?: string;
-  totalEpisodes?: number;
-  totalPages?: number;
-  genres?: string[];
-  creator?: string;
-  year?: string;
-};
-
 // In-memory storage for development
-let watchlistItems: WatchlistItem[] = [];
+export let watchlistItems: WatchlistItem[] = [];
 
 // GET /api/watchlist
 export async function GET() {

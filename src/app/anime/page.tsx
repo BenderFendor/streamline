@@ -26,6 +26,11 @@ type Anime = {
   };
 };
 
+// Define types for filter values
+type SortOption = 'TRENDING_DESC' | 'POPULARITY_DESC' | 'SCORE_DESC' | 'START_DATE_DESC' | 'EPISODES_DESC' | 'FAVOURITES_DESC';
+type FormatOption = 'TV' | 'MOVIE' | 'OVA' | 'ONA' | 'SPECIAL' | 'MUSIC' | '';
+type StatusOption = 'FINISHED' | 'RELEASING' | 'NOT_YET_RELEASED' | 'CANCELLED' | 'HIATUS' | '';
+
 export default function AnimePage() {
   const router = useRouter();
   const [animeList, setAnimeList] = useState<Anime[]>([]);
@@ -44,17 +49,17 @@ export default function AnimePage() {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
   
-  // Filters state
-  const [sort, setSort] = useState('TRENDING_DESC');
-  const [format, setFormat] = useState('');
-  const [status, setStatus] = useState('');
+  // Filters state with proper types
+  const [sort, setSort] = useState<SortOption>('TRENDING_DESC');
+  const [format, setFormat] = useState<FormatOption>('');
+  const [status, setStatus] = useState<StatusOption>('');
   const [genre, setGenre] = useState('');
   
   // Get filter options
   const { formats, statuses, sorts, genres } = getAnimeFilters();
   
   // Observer for infinite scrolling
-  const observer = useRef<IntersectionObserver | undefined>();
+  const observer = useRef<IntersectionObserver | undefined>(undefined);
   const lastAnimeElementRef = useCallback((node: HTMLElement | null) => {
     if (loading) return;
     if (observer.current) observer.current.disconnect();
@@ -339,13 +344,13 @@ export default function AnimePage() {
 
             {/* Filter dropdown */}
             {showFilters && (
-              <div className="absolute right-0 mt-2 w-72 bg-background-secondary/95 backdrop-blur-sm rounded-xl shadow-lg p-4 z-20">
+              <div className="absolute right-0 mt-2 w-72 bg-background-secondary/95 backdrop-blur-sm rounded-xl shadow-lg p-4 z-50">
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-text-secondary mb-1">Sort By</label>
                     <select
                       value={sort}
-                      onChange={(e) => setSort(e.target.value)}
+                      onChange={(e) => setSort(e.target.value as SortOption)}
                       className="w-full bg-background-tertiary/50 rounded-lg p-2 text-text-primary"
                     >
                       {Object.entries(sorts).map(([value, label]) => (
@@ -358,7 +363,7 @@ export default function AnimePage() {
                     <label className="block text-sm font-medium text-text-secondary mb-1">Format</label>
                     <select
                       value={format}
-                      onChange={(e) => setFormat(e.target.value)}
+                      onChange={(e) => setFormat(e.target.value as FormatOption)}
                       className="w-full bg-background-tertiary/50 rounded-lg p-2 text-text-primary"
                     >
                       <option value="">All Formats</option>
@@ -372,7 +377,7 @@ export default function AnimePage() {
                     <label className="block text-sm font-medium text-text-secondary mb-1">Status</label>
                     <select
                       value={status}
-                      onChange={(e) => setStatus(e.target.value)}
+                      onChange={(e) => setStatus(e.target.value as StatusOption)}
                       className="w-full bg-background-tertiary/50 rounded-lg p-2 text-text-primary"
                     >
                       <option value="">All Status</option>
@@ -434,6 +439,128 @@ export default function AnimePage() {
       {error && (
         <div className="bg-red-600/20 border border-red-600 text-red-600 p-4 rounded-lg mb-6">
           {error}
+        </div>
+      )}
+      
+      {/* Active filter chips */}
+      {!loading && animeList.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-6">
+          {/* Sort filter chip */}
+          {sort && sorts[sort] && (
+            <div className="flex items-center bg-accent-primary/10 text-accent-primary px-3 py-1.5 rounded-full text-sm">
+              <span>{sorts[sort]}</span>
+              <button
+                onClick={() => {
+                  setSort('TRENDING_DESC');
+                  loadAnime(true);
+                }}
+                className="ml-2 hover:text-accent-primary/80"
+                aria-label="Clear sort filter"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {/* Format filter chip */}
+          {format && formats[format] && (
+            <div className="flex items-center bg-accent-primary/10 text-accent-primary px-3 py-1.5 rounded-full text-sm">
+              <span>{formats[format]}</span>
+              <button
+                onClick={() => {
+                  setFormat('');
+                  loadAnime(true);
+                }}
+                className="ml-2 hover:text-accent-primary/80"
+                aria-label="Clear format filter"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {/* Status filter chip */}
+          {status && statuses[status] && (
+            <div className="flex items-center bg-accent-primary/10 text-accent-primary px-3 py-1.5 rounded-full text-sm">
+              <span>{statuses[status]}</span>
+              <button
+                onClick={() => {
+                  setStatus('');
+                  loadAnime(true);
+                }}
+                className="ml-2 hover:text-accent-primary/80"
+                aria-label="Clear status filter"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {/* Genre filter chip */}
+          {genre && (
+            <div className="flex items-center bg-accent-primary/10 text-accent-primary px-3 py-1.5 rounded-full text-sm">
+              <span>{genre}</span>
+              <button
+                onClick={() => {
+                  setGenre('');
+                  loadAnime(true);
+                }}
+                className="ml-2 hover:text-accent-primary/80"
+                aria-label="Clear genre filter"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {/* Search filter chip */}
+          {search && (
+            <div className="flex items-center bg-accent-primary/10 text-accent-primary px-3 py-1.5 rounded-full text-sm">
+              <span>Search: {search}</span>
+              <button
+                onClick={() => {
+                  setSearch('');
+                  setSearchInput('');
+                  loadAnime(true);
+                }}
+                className="ml-2 hover:text-accent-primary/80"
+                aria-label="Clear search"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {/* Clear all filters button */}
+          {(sort !== 'TRENDING_DESC' || format || status || genre || search) && (
+            <button
+              onClick={() => {
+                setSort('TRENDING_DESC');
+                setFormat('');
+                setStatus('');
+                setGenre('');
+                setSearch('');
+                setSearchInput('');
+                loadAnime(true);
+              }}
+              className="flex items-center gap-1 bg-red-500/10 text-red-500 px-3 py-1.5 rounded-full text-sm hover:bg-red-500/20 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+              Clear all filters
+            </button>
+          )}
         </div>
       )}
       
