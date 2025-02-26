@@ -295,7 +295,7 @@ export default function AnimePage() {
             </div>
           </form>
           
-          {/* Filter toggle button */}
+          {/* Improved Filter toggle button */}
           <button 
             onClick={() => setShowFilters(!showFilters)}
             className="flex items-center gap-2 bg-background-secondary/90 text-text-primary px-4 py-2 rounded-xl hover:bg-background-tertiary transition-all duration-300"
@@ -303,7 +303,16 @@ export default function AnimePage() {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
             </svg>
-            Filters {showFilters ? '▼' : '▶'}
+            <span>Filters</span>
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              className={`h-4 w-4 transition-transform duration-300 ${showFilters ? 'rotate-180' : ''}`} 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
           </button>
         </div>
         
@@ -408,20 +417,33 @@ export default function AnimePage() {
         </div>
       )}
       
-      {/* Anime grid with snap scrolling */}
+      {/* Anime grid with improved snap scrolling */}
       <div 
-        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 snap-y snap-mandatory"
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 snap-y snap-mandatory scroll-pt-6 overflow-y-auto"
+        style={{ 
+          scrollSnapType: 'y mandatory', 
+          scrollPaddingTop: '1.5rem', 
+          scrollPaddingBottom: '1.5rem' 
+        }}
       >
         {animeList.map((anime, index) => {
           const isLast = index === animeList.length - 1;
           const animeIdStr = anime.id.toString();
           const isInWatchlist = watchlistItems[animeIdStr];
           
+          // Calculate the row number (0-based) for snap alignment
+          const rowIndex = Math.floor(index / (window.innerWidth >= 1024 ? 5 : window.innerWidth >= 768 ? 4 : window.innerWidth >= 640 ? 3 : 2));
+          
           return (
             <div 
               key={`${anime.id}-${index}`}
               ref={isLast ? lastAnimeElementRef : undefined}
-              className="relative bg-background-secondary/80 backdrop-blur-sm rounded-xl overflow-hidden hover:bg-background-tertiary/90 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-accent-primary/20 cursor-pointer snap-start"
+              className={`relative bg-background-secondary/80 backdrop-blur-sm rounded-xl overflow-hidden hover:bg-background-tertiary/90 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-accent-primary/20 cursor-pointer ${
+                index % (window.innerWidth >= 1024 ? 5 : window.innerWidth >= 768 ? 4 : window.innerWidth >= 640 ? 3 : 2) === 0 ? 'scroll-snap-align-start' : ''
+              }`}
+              style={{
+                scrollSnapAlign: index % (window.innerWidth >= 1024 ? 5 : window.innerWidth >= 768 ? 4 : window.innerWidth >= 640 ? 3 : 2) === 0 ? 'start' : 'none'
+              }}
               onClick={() => navigateToAnimeDetails(anime.id)}
             >
               {/* Anime poster */}
