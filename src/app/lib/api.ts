@@ -697,8 +697,32 @@ export async function fetchWatchlist(): Promise<WatchlistItem[]> {
 }
 
 // Fetch details for a specific show (movie or TV)
-export async function fetchShowDetails(id: string | number): Promise<any> {
-  // Try movie first
+export async function fetchShowDetails(id: string | number, mediaType?: string | null): Promise<any> {
+  // If media type is specified, try that first
+  if (mediaType) {
+    try {
+      const response = await fetch(
+        `${TMDB_BASE_URL}/${mediaType}/${id}?append_to_response=credits,videos,similar`,
+        tmdbFetchOptions
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ${mediaType}: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return {
+        ...data,
+        title: mediaType === 'tv' ? data.name : data.title,
+        release_date: mediaType === 'tv' ? data.first_air_date : data.release_date,
+      };
+    } catch (error) {
+      console.error(`Error fetching ${mediaType} details:`, error);
+      throw error;
+    }
+  }
+
+  // If no media type or the first try failed, try movie first then TV
   try {
     const movieResponse = await fetch(
       `${TMDB_BASE_URL}/movie/${id}?append_to_response=credits,videos,similar`,

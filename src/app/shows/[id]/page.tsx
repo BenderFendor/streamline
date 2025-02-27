@@ -69,7 +69,11 @@ export default function ShowDetailsPage() {
       }
 
       try {
-        const data = await fetchShowDetails(params.id);
+        // Get media type from URL search params
+        const urlParams = new URLSearchParams(window.location.search);
+        const mediaType = urlParams.get('type');
+        
+        const data = await fetchShowDetails(params.id, mediaType);
         setShow(data);
         setError(null);
       } catch (error) {

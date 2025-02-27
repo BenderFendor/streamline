@@ -28,12 +28,5 @@ Add the feature to click on cast memebers as well and get their infomation and m
 
 # Add later
 
-have the home and anime on the nav bar not in a drop down
 
-Removing the showing 20 movies line or showing 20 tv shows
-
-redo the all years drop down to have better ux and ui using like a scrolling year thing and you can enter the year with text as well
-
-When using the filters and doesn't reload anything so like you use the filters for like an action moive it doesn't reload to get only actions moives also infinte scroll doesn't work with that as well
-
-when using the shows mode and clikcing on a show for infomation it sends me to the wrong moive this works when it is the default show page but when using popuplar or top rated it doesn't link to the right page please fix that as well
+Move the movie and tv shows buttons to the right and have the search bar next to the watchlist button so have them switch spots

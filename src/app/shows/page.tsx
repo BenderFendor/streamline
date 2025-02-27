@@ -138,10 +138,10 @@ export default function ShowsPage() {
         genre: genreFilter
       });
       
-      // Add media_type to each show for correct routing
+      // Process results
       const resultsWithMediaType = data.results.map(show => ({
         ...show,
-        media_type: mediaType
+        media_type: mediaType // Ensure each show has the correct media type
       }));
       
       // Filter results by year if year filter is applied
@@ -154,15 +154,15 @@ export default function ShowsPage() {
       }
       
       setShows(prevShows => {
-        // Replace shows on first page, append on subsequent pages
         return page === 1 ? filteredResults : [...prevShows, ...filteredResults];
       });
       
       // Update hasMore flag based on available pages and results
-      setHasMore(data.page < data.total_pages && filteredResults.length > 0);
-      
-      // Update isSearching state
-      setIsSearching(!!debouncedQuery);
+      setHasMore(
+        data.page < data.total_pages && 
+        filteredResults.length > 0 && 
+        (!yearFilter || filteredResults.length === data.results.length)
+      );
     } catch (error) {
       console.error('Error loading shows:', error);
     } finally {
@@ -223,9 +223,7 @@ export default function ShowsPage() {
 
   // Handle navigation to show details
   const navigateToShow = (show: Show) => {
-    // Use the show's media_type or the current mediaType as fallback
-    const type = show.media_type || mediaType;
-    router.push(`/shows/${show.id}`);
+    router.push(`/shows/${show.id}?type=${show.media_type || mediaType}`);
   };
 
   return (
@@ -234,47 +232,30 @@ export default function ShowsPage() {
       <div className="mb-4 flex flex-wrap justify-between items-center bg-background-secondary/50 backdrop-blur-md p-2 rounded-xl shadow-md">
         {/* Main navigation buttons */}
         <div className="flex items-center gap-2">
-          <div className="relative" ref={navMenuRef}>
-            <button 
-              onClick={() => setNavMenuOpen(!navMenuOpen)}
-              className="px-3 py-2 rounded-lg bg-background-secondary hover:bg-background-tertiary/50 transition-colors flex items-center gap-1"
-            >
-              <span>Menu</span>
-              <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${navMenuOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            
-            {/* Dropdown menu */}
-            {navMenuOpen && (
-              <div className="absolute z-20 mt-1 w-40 bg-background-secondary rounded-lg shadow-lg py-1 border border-background-tertiary/50">
-                <button onClick={() => { router.push('/'); setNavMenuOpen(false); }} className="w-full text-left px-4 py-2 hover:bg-background-tertiary/50 flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                  </svg>
-                  Home
-                </button>
-                <button onClick={() => { router.push('/shows'); setNavMenuOpen(false); }} className="w-full text-left px-4 py-2 bg-accent-primary/20 text-accent-primary flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm3 2h6v4H7V5zm8 8v2h1v-2h-1zm-2-2H7v4h6v-4zm2 0h1V9h-1v2zm1-4V5h-1v2h1zM5 5v2H4V5h1zm0 4H4v2h1V9zm-1 4h1v2H4v-2z" clipRule="evenodd" />
-                  </svg>
-                  Shows
-                </button>
-                <button onClick={() => { router.push('/anime'); setNavMenuOpen(false); }} className="w-full text-left px-4 py-2 hover:bg-background-tertiary/50 flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
-                  </svg>
-                  Anime
-                </button>
-                <button onClick={() => { router.push('/watchlist'); setNavMenuOpen(false); }} className="w-full text-left px-4 py-2 hover:bg-background-tertiary/50 flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
-                  </svg>
-                  Watchlist
-                </button>
-              </div>
-            )}
-          </div>
+          <button onClick={() => router.push('/')} className="px-3 py-2 rounded-lg hover:bg-background-tertiary/50 transition-colors flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+            </svg>
+            <span>Home</span>
+          </button>
+          <button onClick={() => router.push('/shows')} className="px-3 py-2 rounded-lg bg-accent-primary/20 text-accent-primary transition-colors flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm3 2h6v4H7V5zm8 8v2h1v-2h-1zm-2-2H7v4h6v-4zm2 0h1V9h-1v2zm1-4V5h-1v2h1zM5 5v2H4V5h1zm0 4H4v2h1V9zm-1 4h1v2H4v-2z" clipRule="evenodd" />
+            </svg>
+            <span>Shows</span>
+          </button>
+          <button onClick={() => router.push('/anime')} className="px-3 py-2 rounded-lg hover:bg-background-tertiary/50 transition-colors flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
+            </svg>
+            <span>Anime</span>
+          </button>
+          <button onClick={() => router.push('/watchlist')} className="px-3 py-2 rounded-lg hover:bg-background-tertiary/50 transition-colors flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+            </svg>
+            <span>Watchlist</span>
+          </button>
           
           {/* Media type toggle */}
           <div className="flex rounded-lg overflow-hidden border border-background-tertiary/30">
@@ -291,35 +272,33 @@ export default function ShowsPage() {
               TV Shows
             </button>
           </div>
-          
-          {/* Filters toggle button */}
-          <button 
+        </div>
+        
+        {/* Search input */}
+        <div className="flex items-center gap-2">
+          <div className="flex-grow max-w-md relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search..."
+              className="w-full bg-background-secondary/90 text-text-primary px-4 py-2 rounded-lg border border-background-secondary/50 focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/20 focus:outline-none pl-9 text-sm"
+            />
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary/70" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <button
             onClick={() => setFiltersOpen(!filtersOpen)}
-            className="px-3 py-2 rounded-lg hover:bg-background-tertiary/50 transition-colors flex items-center gap-1.5"
-            aria-label="Toggle Filters"
+            className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-1 ${
+              filtersOpen ? 'bg-accent-primary/20 text-accent-primary' : 'hover:bg-background-tertiary/50'
+            }`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
             </svg>
-            <span className="text-sm">Filters</span>
-            {(!!yearFilter || !!genreFilter || category !== 'popular') && (
-              <span className="bg-accent-primary w-2 h-2 rounded-full"></span>
-            )}
+            <span className="hidden sm:inline">Filters</span>
           </button>
-        </div>
-        
-        {/* Search input */}
-        <div className="flex-grow max-w-md relative">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search..."
-            className="w-full bg-background-secondary/90 text-text-primary px-4 py-2 rounded-lg border border-background-secondary/50 focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/20 focus:outline-none pl-9 text-sm"
-          />
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary/70" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-          </svg>
         </div>
       </div>
       
@@ -354,16 +333,35 @@ export default function ShowsPage() {
           </select>
           
           {/* Year filter */}
-          <select
-            value={yearFilter}
-            onChange={(e) => setYearFilter(e.target.value)}
-            className="bg-background-secondary/90 text-text-primary px-3 py-1.5 rounded-lg border border-background-secondary/50 text-sm"
-          >
-            <option value="">All Years</option>
-            {years.map((year) => (
-              <option key={year} value={year.toString()}>{year}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <input
+              type="number"
+              value={yearFilter}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (!value || (parseInt(value) >= 1900 && parseInt(value) <= currentYear)) {
+                  setYearFilter(value);
+                }
+              }}
+              placeholder="Year"
+              min="1900"
+              max={currentYear}
+              className="w-32 bg-background-secondary/90 text-text-primary px-3 py-1.5 rounded-lg border border-background-secondary/50 text-sm"
+            />
+            <div className="absolute top-full mt-1 w-32 max-h-48 overflow-y-auto bg-background-secondary rounded-lg border border-background-tertiary/50 shadow-lg scrollbar-thin scrollbar-thumb-accent-primary/20 scrollbar-track-background-tertiary/20">
+              {years.map((year) => (
+                <button
+                  key={year}
+                  onClick={() => setYearFilter(year.toString())}
+                  className={`w-full text-left px-3 py-1.5 text-sm hover:bg-background-tertiary/50 ${
+                    yearFilter === year.toString() ? 'bg-accent-primary/20 text-accent-primary' : ''
+                  }`}
+                >
+                  {year}
+                </button>
+              ))}
+            </div>
+          </div>
           
           {/* Reset filters button - Only show when filters are applied */}
           {(!!searchQuery || !!yearFilter || !!genreFilter || category !== 'popular') && (
@@ -377,13 +375,6 @@ export default function ShowsPage() {
               Reset
             </button>
           )}
-        </div>
-      )}
-      
-      {/* Show count display */}
-      {!isLoading && shows.length > 0 && (
-        <div className="mb-2 text-text-secondary/80 text-sm">
-          <p>Showing {shows.length} {mediaType === 'tv' ? 'TV shows' : 'movies'}</p>
         </div>
       )}
       
