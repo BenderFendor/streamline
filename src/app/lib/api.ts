@@ -674,7 +674,8 @@ export function getAnimeFilters() {
     'Slice of Life',
     'Sports',
     'Supernatural',
-    'Thriller'
+    'Thriller',
+    'Ecchi',
   ];
   
   return { formats, statuses, sorts, genres };

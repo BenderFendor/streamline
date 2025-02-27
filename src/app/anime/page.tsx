@@ -7,6 +7,7 @@ import { fetchAnime, getAnimeFilters } from '../lib/api';
 import { addToWatchlist as addToWatchlistApi, removeFromWatchlist, getWatchlist } from '../lib/watchlist';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Image from 'next/image';
+import AnimeNavbar, { FilterValues } from '../components/AnimeNavbar';
 
 // Define the Anime type for type safety
 type Anime = {
@@ -26,11 +27,6 @@ type Anime = {
   };
 };
 
-// Define types for filter values
-type SortOption = 'TRENDING_DESC' | 'POPULARITY_DESC' | 'SCORE_DESC' | 'START_DATE_DESC' | 'EPISODES_DESC' | 'FAVOURITES_DESC';
-type FormatOption = 'TV' | 'MOVIE' | 'OVA' | 'ONA' | 'SPECIAL' | 'MUSIC' | '';
-type StatusOption = 'FINISHED' | 'RELEASING' | 'NOT_YET_RELEASED' | 'CANCELLED' | 'HIATUS' | '';
-
 export default function AnimePage() {
   const router = useRouter();
   const [animeList, setAnimeList] = useState<Anime[]>([]);
@@ -38,7 +34,6 @@ export default function AnimePage() {
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [addingToWatchlist, setAddingToWatchlist] = useState<number | null>(null);
   const [watchlistItems, setWatchlistItems] = useState<Record<string, string>>({});
@@ -47,13 +42,15 @@ export default function AnimePage() {
   // Header visibility state
   const [headerVisible, setHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const [showFilters, setShowFilters] = useState(false);
   
-  // Filters state with proper types
-  const [sort, setSort] = useState<SortOption>('TRENDING_DESC');
-  const [format, setFormat] = useState<FormatOption>('');
-  const [status, setStatus] = useState<StatusOption>('');
-  const [genre, setGenre] = useState('');
+  // Filters state
+  const [filterValues, setFilterValues] = useState<FilterValues>({
+    sort: 'TRENDING_DESC',
+    format: '',
+    status: '',
+    genre: '',
+    search: ''
+  });
   
   // Get filter options
   const { formats, statuses, sorts, genres } = getAnimeFilters();
@@ -83,11 +80,11 @@ export default function AnimePage() {
       }
       
       const data = await fetchAnime({
-        sort: sort,
-        format: format || undefined,
-        status: status || undefined,
-        search: search || undefined,
-        genre: genre || undefined,
+        sort: filterValues.sort,
+        format: filterValues.format || undefined,
+        status: filterValues.status || undefined,
+        search: filterValues.search || undefined,
+        genre: filterValues.genre || undefined,
         page: currentPage
       });
       
@@ -100,7 +97,7 @@ export default function AnimePage() {
     } finally {
       setLoading(false);
     }
-  }, [page, sort, format, status, search, genre]);
+  }, [page, filterValues]);
 
   // Load user's watchlist to check which anime are already added
   const loadWatchlist = useCallback(async () => {
@@ -135,15 +132,35 @@ export default function AnimePage() {
   }, [page, loadAnime]);
 
   // Handle filter changes
+  const handleFilterChange = (key: keyof FilterValues, value: string) => {
+    setFilterValues(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+  
+  // Apply filters
   const applyFilters = () => {
     loadAnime(true);
-    setShowFilters(false); // Hide filters after applying
   };
 
   // Handle search
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setSearch(searchInput);
+    setFilterValues(prev => ({
+      ...prev,
+      search: searchInput
+    }));
+    loadAnime(true);
+  };
+  
+  // Clear search
+  const clearSearch = () => {
+    setFilterValues(prev => ({
+      ...prev,
+      search: ''
+    }));
+    setSearchInput('');
     loadAnime(true);
   };
 
@@ -257,310 +274,26 @@ export default function AnimePage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Main navigation bar */}
-      <div className="mb-6 flex justify-between items-center bg-background-secondary/50 backdrop-blur-md p-3 rounded-xl shadow-md">
-        <div className="flex items-center gap-1.5 sm:gap-3">
-          <button
-            onClick={() => router.push('/')}
-            className="px-2 sm:px-3 py-1.5 rounded-lg hover:bg-background-tertiary/50 transition-colors flex items-center gap-1.5"
-            aria-label="Home"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-            </svg>
-            <span className="hidden sm:inline">Home</span>
-          </button>
-          <button
-            onClick={() => router.push('/shows')}
-            className="px-2 sm:px-3 py-1.5 rounded-lg hover:bg-background-tertiary/50 transition-colors flex items-center gap-1.5"
-            aria-label="Shows"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm3 2h6v4H7V5zm8 8v2h1v-2h-1zm-2-2H7v4h6v-4zm2 0h1V9h-1v2zm1-4V5h-1v2h1zM5 5v2H4V5h1zm0 4H4v2h1V9zm-1 4h1v2H4v-2z" clipRule="evenodd" />
-            </svg>
-            <span className="hidden sm:inline">Shows</span>
-          </button>
-          <button
-            onClick={() => router.push('/anime')}
-            className="px-2 sm:px-3 py-1.5 rounded-lg bg-accent-primary/20 text-accent-primary font-medium transition-colors flex items-center gap-1.5"
-            aria-label="Anime"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
-            </svg>
-            <span className="hidden sm:inline">Anime</span>
-          </button>
-          <button
-            onClick={() => router.push('/watchlist')}
-            className="px-2 sm:px-3 py-1.5 rounded-lg hover:bg-background-tertiary/50 transition-colors flex items-center gap-1.5"
-            aria-label="Watchlist"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
-            </svg>
-            <span className="hidden sm:inline">Watchlist</span>
-          </button>
-        </div>
-        <div className="flex items-center gap-4">
-          {/* Search bar */}
-          <form onSubmit={handleSearch} className="relative hidden sm:block">
-            <input
-              type="text"
-              placeholder="Search anime..."
-              className="w-60 p-2 pl-10 rounded-lg bg-background-secondary/90 text-text-primary border border-background-secondary/50 hover:border-accent-primary focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/20"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-            />
-            <button 
-              type="submit"
-              className="absolute inset-y-0 left-0 px-3 flex items-center text-text-secondary hover:text-accent-primary"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </button>
-          </form>
-
-          {/* Filter toggle and dropdown */}
-          <div className="relative">
-            <button 
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 bg-background-secondary/90 text-text-primary px-4 py-2 rounded-xl hover:bg-background-tertiary transition-all duration-300"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
-              <span>Filters</span>
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className={`h-4 w-4 transition-transform duration-300 ${showFilters ? 'rotate-180' : ''}`} 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            {/* Filter dropdown */}
-            {showFilters && (
-              <div className="absolute right-0 mt-2 w-72 bg-background-secondary/95 backdrop-blur-sm rounded-xl shadow-lg p-4 z-[100]">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-1">Sort By</label>
-                    <select
-                      value={sort}
-                      onChange={(e) => setSort(e.target.value as SortOption)}
-                      className="w-full bg-background-tertiary/50 rounded-lg p-2 text-text-primary"
-                    >
-                      {Object.entries(sorts).map(([value, label]) => (
-                        <option key={value} value={value}>{label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-1">Format</label>
-                    <select
-                      value={format}
-                      onChange={(e) => setFormat(e.target.value as FormatOption)}
-                      className="w-full bg-background-tertiary/50 rounded-lg p-2 text-text-primary"
-                    >
-                      <option value="">All Formats</option>
-                      {Object.entries(formats).map(([value, label]) => (
-                        <option key={value} value={value}>{label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-1">Status</label>
-                    <select
-                      value={status}
-                      onChange={(e) => setStatus(e.target.value as StatusOption)}
-                      className="w-full bg-background-tertiary/50 rounded-lg p-2 text-text-primary"
-                    >
-                      <option value="">All Status</option>
-                      {Object.entries(statuses).map(([value, label]) => (
-                        <option key={value} value={value}>{label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-1">Genre</label>
-                    <select
-                      value={genre}
-                      onChange={(e) => setGenre(e.target.value)}
-                      className="w-full bg-background-tertiary/50 rounded-lg p-2 text-text-primary"
-                    >
-                      <option value="">All Genres</option>
-                      {genres.map((g) => (
-                        <option key={g} value={g}>{g}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <button
-                    onClick={applyFilters}
-                    className="w-full bg-accent-primary hover:bg-accent-primary/90 text-text-primary py-2 rounded-lg transition-colors"
-                  >
-                    Apply Filters
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-      
-      {/* Mobile search bar */}
-      <div className="sm:hidden mb-4">
-        <form onSubmit={handleSearch} className="relative">
-          <input
-            type="text"
-            placeholder="Search anime..."
-            className="w-full p-2 pl-10 rounded-lg bg-background-secondary/90 text-text-primary border border-background-secondary/50 hover:border-accent-primary focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/20"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-          />
-          <button 
-            type="submit"
-            className="absolute inset-y-0 left-0 px-3 flex items-center text-text-secondary hover:text-accent-primary"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </button>
-        </form>
-      </div>
+      {/* Use the new AnimeNavbar component */}
+      <AnimeNavbar
+        headerVisible={headerVisible}
+        searchInput={searchInput}
+        setSearchInput={setSearchInput}
+        filterValues={filterValues}
+        onSearch={handleSearch}
+        onFilterChange={handleFilterChange}
+        onApplyFilters={applyFilters}
+        onClearSearch={clearSearch}
+        sorts={sorts}
+        formats={formats}
+        statuses={statuses}
+        genres={genres}
+      />
       
       {/* Error message */}
       {error && (
         <div className="bg-red-600/20 border border-red-600 text-red-600 p-4 rounded-lg mb-6">
           {error}
-        </div>
-      )}
-      
-      {/* Active filter chips */}
-      {!loading && animeList.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-6">
-          {/* Sort filter chip */}
-          {sort && sorts[sort] && (
-            <div className="flex items-center bg-accent-primary/10 text-accent-primary px-3 py-1.5 rounded-full text-sm">
-              <span>{sorts[sort]}</span>
-              <button
-                onClick={() => {
-                  setSort('TRENDING_DESC');
-                  loadAnime(true);
-                }}
-                className="ml-2 hover:text-accent-primary/80"
-                aria-label="Clear sort filter"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
-          )}
-
-          {/* Format filter chip */}
-          {format && formats[format] && (
-            <div className="flex items-center bg-accent-primary/10 text-accent-primary px-3 py-1.5 rounded-full text-sm">
-              <span>{formats[format]}</span>
-              <button
-                onClick={() => {
-                  setFormat('');
-                  loadAnime(true);
-                }}
-                className="ml-2 hover:text-accent-primary/80"
-                aria-label="Clear format filter"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
-          )}
-
-          {/* Status filter chip */}
-          {status && statuses[status] && (
-            <div className="flex items-center bg-accent-primary/10 text-accent-primary px-3 py-1.5 rounded-full text-sm">
-              <span>{statuses[status]}</span>
-              <button
-                onClick={() => {
-                  setStatus('');
-                  loadAnime(true);
-                }}
-                className="ml-2 hover:text-accent-primary/80"
-                aria-label="Clear status filter"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
-          )}
-
-          {/* Genre filter chip */}
-          {genre && (
-            <div className="flex items-center bg-accent-primary/10 text-accent-primary px-3 py-1.5 rounded-full text-sm">
-              <span>{genre}</span>
-              <button
-                onClick={() => {
-                  setGenre('');
-                  loadAnime(true);
-                }}
-                className="ml-2 hover:text-accent-primary/80"
-                aria-label="Clear genre filter"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
-          )}
-
-          {/* Search filter chip */}
-          {search && (
-            <div className="flex items-center bg-accent-primary/10 text-accent-primary px-3 py-1.5 rounded-full text-sm">
-              <span>Search: {search}</span>
-              <button
-                onClick={() => {
-                  setSearch('');
-                  setSearchInput('');
-                  loadAnime(true);
-                }}
-                className="ml-2 hover:text-accent-primary/80"
-                aria-label="Clear search"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
-          )}
-
-          {/* Clear all filters button */}
-          {(sort !== 'TRENDING_DESC' || format || status || genre || search) && (
-            <button
-              onClick={() => {
-                setSort('TRENDING_DESC');
-                setFormat('');
-                setStatus('');
-                setGenre('');
-                setSearch('');
-                setSearchInput('');
-                loadAnime(true);
-              }}
-              className="flex items-center gap-1 bg-red-500/10 text-red-500 px-3 py-1.5 rounded-full text-sm hover:bg-red-500/20 transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-              Clear all filters
-            </button>
-          )}
         </div>
       )}
       
@@ -570,7 +303,9 @@ export default function AnimePage() {
         style={{ 
           scrollSnapType: 'y mandatory', 
           scrollPaddingTop: '1.5rem', 
-          scrollPaddingBottom: '1.5rem' 
+          scrollPaddingBottom: '1.5rem',
+          position: 'relative',
+          zIndex: 0
         }}
       >
         {animeList.map((anime, index) => {
@@ -704,12 +439,14 @@ export default function AnimePage() {
           <p className="text-lg">No anime found matching your criteria</p>
           <button
             onClick={() => {
-              setSearch('');
+              setFilterValues({
+                sort: 'TRENDING_DESC',
+                format: '',
+                status: '',
+                genre: '',
+                search: ''
+              });
               setSearchInput('');
-              setFormat('');
-              setStatus('');
-              setGenre('');
-              setSort('TRENDING_DESC');
               loadAnime(true);
             }}
             className="bg-accent-primary hover:bg-accent-primary/80 text-white px-4 py-2 rounded"
