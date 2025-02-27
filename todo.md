@@ -24,3 +24,8 @@ Like popular movies now playing movies etc
 Trenindg movies trending tv shows trending people
 
 Add the feature to click on cast memebers as well and get their infomation and movies and things like that
+
+
+# Add later
+
+when using the shows mode and clikcing on a show for infomation it sends me to the wrong moive this works when it is the default show page but when using popuplar or top rated it doesn't link to the right page please fix that as well
