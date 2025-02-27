@@ -204,7 +204,11 @@ export default function ShowDetailsPage() {
                 <h2 className="text-2xl font-bold text-text-primary mb-4">Cast</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                   {show.credits.cast.slice(0, 10).map((actor) => (
-                    <div key={actor.id} className="bg-background-secondary rounded-lg p-2 text-center">
+                    <div 
+                      key={actor.id} 
+                      className="bg-background-secondary rounded-lg p-2 text-center cursor-pointer hover:bg-background-tertiary/50 transition-colors"
+                      onClick={() => router.push(`/person/${actor.id}`)}
+                    >
                       {actor.profile_path ? (
                         <img
                           src={`https://image.tmdb.org/t/p/w185${actor.profile_path}`}
@@ -216,7 +220,7 @@ export default function ShowDetailsPage() {
                           <span className="text-text-secondary">No Image</span>
                         </div>
                       )}
-                      <h3 className="text-text-primary font-medium text-sm">{actor.name}</h3>
+                      <h3 className="text-text-primary font-medium text-sm group-hover:text-accent-primary">{actor.name}</h3>
                       <p className="text-text-secondary text-xs">{actor.character}</p>
                     </div>
                   ))}
@@ -232,8 +236,12 @@ export default function ShowDetailsPage() {
                   {show.credits.crew
                     .filter((crew) => crew.job === 'Director')
                     .map((director) => (
-                      <div key={director.id} className="bg-background-secondary rounded-lg p-4">
-                        <h3 className="text-text-primary font-medium">{director.name}</h3>
+                      <div 
+                        key={director.id} 
+                        className="bg-background-secondary rounded-lg p-4 cursor-pointer hover:bg-background-tertiary/50 transition-colors"
+                        onClick={() => router.push(`/person/${director.id}`)}
+                      >
+                        <h3 className="text-text-primary font-medium hover:text-accent-primary">{director.name}</h3>
                       </div>
                     ))}
                 </div>

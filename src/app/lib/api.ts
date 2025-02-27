@@ -734,3 +734,22 @@ export async function fetchShowDetails(id: string | number): Promise<any> {
     throw error;
   }
 }
+
+// Fetch details for a person/cast member
+export async function fetchPersonDetails(id: string | number): Promise<any> {
+  try {
+    const response = await fetch(
+      `${TMDB_BASE_URL}/person/${id}?append_to_response=combined_credits,images`,
+      tmdbFetchOptions
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch person: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching person details:', error);
+    throw error;
+  }
+}
