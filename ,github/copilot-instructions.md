@@ -1,5 +1,8 @@
 # Project Rules & Guidelines
 
+#
+Always use exa-code when implenting code to get updated documentation using web search results.
+
 ## Core Development Principles
 - Use meaningful comments to explain complex functionality
 - Maintain clear documentation for public methods/properties

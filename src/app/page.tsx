@@ -1,120 +1,158 @@
 'use client';
 
-import Image from 'next/image';
-import Link from 'next/link';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import FloatingPosters from './components/FloatingPosters';
+import CinematicNav from './components/CinematicNav';
+import { ChevronRight } from 'lucide-react';
+import { Space_Grotesk } from 'next/font/google';
+
+const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk' });
+
+// Custom cursor for magnetic effect
+function CustomCursor() {
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const [hover, setHover] = useState(false);
+  useEffect(() => {
+    const move = (e: MouseEvent) => setPos({ x: e.clientX, y: e.clientY });
+    const over = (e: MouseEvent) => {
+      const el = e.target as HTMLElement;
+      setHover(!!el.closest('button') || !!el.closest('a') || !!el.closest('.interactive'));
+    };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseover', over);
+    return () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseover', over); };
+  }, []);
+  return (
+    <div className="fixed pointer-events-none z-[100] mix-blend-difference" style={{ left: pos.x, top: pos.y, transform: `translate(-50%,-50%) scale(${hover ? 2.4 : 1})` }}>
+      <div className="w-4 h-4 bg-white rounded-full opacity-80" />
+      <div className={`absolute inset-0 rounded-full border border-white opacity-40 transition-all duration-300 ${hover ? 'scale-150 animate-pulse' : 'scale-100'}`} />
+    </div>
+  );
+}
+
+// Tilt card wrapper
+function TiltCard({ children, className }: { children: React.ReactNode; className?: string }) {
+  const [rot, setRot] = useState({ x: 0, y: 0 });
+  const [hov, setHov] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+  const onMove = (e: React.MouseEvent) => {
+    if (!ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    const x = e.clientX - r.left;
+    const y = e.clientY - r.top;
+    setRot({ x: ((y - r.height / 2) / (r.height / 2)) * -10, y: ((x - r.width / 2) / (r.width / 2)) * 10 });
+    setHov(true);
+  };
+  const onLeave = () => { setHov(false); setRot({ x: 0, y: 0 }); };
+  return (
+    <div ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} className={`relative transition-all duration-200 [transform-style:preserve-3d] ${className || ''}`} style={{ perspective: '1000px' }}>
+      <div className="w-full h-full transition-transform duration-100 ease-linear shadow-xl interactive" style={{ transform: `rotateX(${rot.x}deg) rotateY(${rot.y}deg) scale(${hov ? 1.05 : 1})` }}>
+        {children}
+        <div className="absolute inset-0 pointer-events-none opacity-0" style={{ opacity: hov ? 0.3 : 0, background: 'linear-gradient(125deg,transparent 40%,rgba(255,255,255,0.4) 45%,transparent 50%)', backgroundSize: '200% 200%', backgroundPosition: hov ? '100% 100%' : '0% 0%', transition: 'background-position .5s ease-out, opacity .3s ease' }} />
+      </div>
+    </div>
+  );
+}
+
+function HeroSection({ router }: { router: ReturnType<typeof useRouter> }) {
+  return (
+    <div className="px-6 max-w-7xl mx-auto flex flex-col lg:flex-row gap-16 items-center pt-12 pb-20 fade-up">
+      <div className="flex-1 space-y-10 lg:pt-12 text-center lg:text-left z-20">
+        <div className="space-y-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-red-500/20 bg-red-900/10 text-xs tracking-wider uppercase text-red-400 font-bold mb-4 shadow-[0_0_15px_rgba(220,38,38,0.1)]">
+            <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" /><span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" /></span>
+            System Online v2.5
+          </div>
+          <h1 data-text="Streamline" className="text-6xl sm:text-7xl lg:text-8xl font-bold tracking-tighter leading-[0.9] text-glitch">
+            Streamline<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-100 via-gray-300 to-gray-600">Your Reality.</span>
+          </h1>
+          <p className="text-lg text-gray-400 max-w-xl mx-auto lg:mx-0 leading-relaxed">Stop switching apps. Track your movies, TV shows, anime, and books in one centralized, brutally efficient dashboard.</p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+          <button onClick={() => router.push('/shows')} className="interactive relative px-8 py-4 bg-red-600 text-white font-bold tracking-wide transition-all overflow-hidden rounded-sm hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(220,38,38,0.3)]">
+            <span className="relative flex items-center gap-2">Start Tracking <ChevronRight className="w-4 h-4" /></span>
+          </button>
+          <button onClick={() => router.push('/watchlist')} className="interactive px-8 py-4 border border-white/20 text-white font-medium tracking-wide transition-all bg-black/50 backdrop-blur-sm rounded-sm hover:bg-white/5 hover:scale-105 active:scale-95">My Watchlist</button>
+        </div>
+      </div>
+      <div className="flex-1 w-full max-w-2xl relative z-10 mt-12 lg:mt-0">
+        <div className="absolute inset-0 bg-gradient-to-tr from-red-600/20 to-purple-600/20 blur-[80px] rounded-full animate-pulse" />
+        <TiltCard className="absolute top-0 right-0 w-[60%] z-20">
+          <div className="relative rounded-xl overflow-hidden border border-white/10 bg-[#111]">
+            <div className="aspect-[2/3] relative bg-[#a81e1e]">
+              <img src="https://images.unsplash.com/photo-1594909122845-11baa439b7bf?q=80&w=2070&auto=format&fit=crop" alt="Poster" className="w-full h-full object-cover mix-blend-overlay opacity-60 grayscale transition-all duration-700" />
+              <div className="absolute inset-0 flex flex-col justify-between p-6">
+                <div className="text-yellow-400 font-serif text-5xl font-bold tracking-tighter drop-shadow-2xl text-center mt-4 uppercase border-4 border-yellow-400 p-2 -rotate-2">PULP<br />FICTION</div>
+              </div>
+            </div>
+            <div className="absolute bottom-4 left-4 right-4 bg-black/80 backdrop-blur-md p-3 rounded-lg border border-white/10 flex items-center justify-between">
+              <div className="flex items-center gap-2"><span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" /><span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" /></span><span className="text-[10px] font-bold uppercase tracking-wider text-gray-200">Watching</span></div>
+              <span className="text-[10px] font-mono text-red-400 animate-pulse">01:24:10</span>
+            </div>
+          </div>
+        </TiltCard>
+        <TiltCard className="absolute top-20 left-0 w-[55%] z-30">
+          <div className="bg-[#0f0f0f]/90 backdrop-blur-xl border border-white/10 rounded-xl p-5 font-mono text-sm">
+            <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2"><span className="uppercase tracking-widest text-gray-500 text-[10px]">Active List</span><div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-red-500/50" /><div className="w-2 h-2 rounded-full bg-yellow-500/50" /><div className="w-2 h-2 rounded-full bg-green-500/50" /></div></div>
+            <div className="space-y-3">
+              {[{ title: '2001: A Space Odyssey', checked: true }, { title: 'Blade Runner 2049', checked: false }, { title: 'Seven Samurai', checked: false }].map((it, i) => (
+                <div key={i} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded transition-colors cursor-pointer group">
+                  <div className={`w-4 h-4 border border-white/30 flex items-center justify-center rounded-sm transition-all ${it.checked ? 'bg-red-600 border-red-600' : 'group-hover:border-white'}`}>{it.checked && <div className="w-2 h-2 bg-white rounded-[1px]" />}</div>
+                  <span className={`${it.checked ? 'text-gray-600 line-through' : 'text-gray-300'} truncate group-hover:text-white`}>{it.title}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </TiltCard>
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   const router = useRouter();
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => { if (containerRef.current) { containerRef.current.style.setProperty('--mouse-x', `${e.clientX}px`); containerRef.current.style.setProperty('--mouse-y', `${e.clientY}px`); } };
+    window.addEventListener('mousemove', onMouseMove);
+    return () => { window.removeEventListener('mousemove', onMouseMove); };
+  }, []);
 
   return (
-    <div className="min-h-screen bg-background-primary text-text-primary relative overflow-hidden">
-      {/* Main navigation bar */}
-      <div className="mb-6 flex justify-between items-center bg-background-secondary/50 backdrop-blur-md p-3 rounded-xl shadow-md">
-        <div className="flex items-center gap-1.5 sm:gap-3">
-          <button
-            onClick={() => router.push('/')}
-            className="px-2 sm:px-3 py-1.5 rounded-lg bg-accent-primary/20 text-accent-primary font-medium transition-colors flex items-center gap-1.5"
-            aria-label="Home"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-            </svg>
-            <span className="hidden sm:inline">Home</span>
-          </button>
-          <button
-            onClick={() => router.push('/shows')}
-            className="px-2 sm:px-3 py-1.5 rounded-lg hover:bg-background-tertiary/50 transition-colors flex items-center gap-1.5"
-            aria-label="Shows"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm3 2h6v4H7V5zm8 8v2h1v-2h-1zm-2-2H7v4h6v-4zm2 0h1V9h-1v2zm1-4V5h-1v2h1zM5 5v2H4V5h1zm0 4H4v2h1V9zm-1 4h1v2H4v-2z" clipRule="evenodd" />
-            </svg>
-            <span className="hidden sm:inline">Shows</span>
-          </button>
-          <button
-            onClick={() => router.push('/anime')}
-            className="px-2 sm:px-3 py-1.5 rounded-lg hover:bg-background-tertiary/50 transition-colors flex items-center gap-1.5"
-            aria-label="Anime"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
-            </svg>
-            <span className="hidden sm:inline">Anime</span>
-          </button>
-          <button
-            onClick={() => router.push('/watchlist')}
-            className="px-2 sm:px-3 py-1.5 rounded-lg hover:bg-background-tertiary/50 transition-colors flex items-center gap-1.5"
-            aria-label="Watchlist"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
-            </svg>
-            <span className="hidden sm:inline">Watchlist</span>
-          </button>
-        </div>
-      </div>
-
+    <div ref={containerRef} className={`${spaceGrotesk.variable} font-[var(--font-space-grotesk)] min-h-screen bg-background-primary text-text-primary relative overflow-hidden cursor-none`}>
+      <CustomCursor />
       <FloatingPosters />
-      
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8">
-        <main className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-6xl font-bold mb-6 bg-gradient-to-r from-accent-primary to-accent-secondary bg-clip-text text-transparent">
-            Streamline Your Entertainment
-          </h1>
-          <p className="text-lg sm:text-xl text-text-secondary mb-12 max-w-2xl mx-auto">
-            Track, discover, and manage all your movies, TV shows, anime, and books in one place.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <Link 
-              href="/shows"
-              className="px-8 py-3 bg-accent-primary hover:bg-accent-primary/90 text-white rounded-full font-medium transition-colors"
-            >
-              Get Started
-            </Link>
-            <Link
-              href="/watchlist"
-              className="px-8 py-3 border-2 border-accent-secondary hover:bg-accent-secondary/10 text-accent-secondary rounded-full font-medium transition-colors"
-            >
-              My Watchlist
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="p-6 bg-background-secondary rounded-xl hover:bg-background-tertiary transition-colors">
-              <div className="w-12 h-12 mb-4 mx-auto bg-accent-primary/20 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-accent-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h18M3 16h18" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Track Everything</h3>
-              <p className="text-text-secondary">Keep track of your movies, shows, anime, and books all in one place.</p>
-            </div>
-
-            <div className="p-6 bg-background-secondary rounded-xl hover:bg-background-tertiary transition-colors">
-              <div className="w-12 h-12 mb-4 mx-auto bg-accent-secondary/20 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-accent-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Discover New Content</h3>
-              <p className="text-text-secondary">Find new favorites with personalized recommendations.</p>
-            </div>
-
-            <div className="p-6 bg-background-secondary rounded-xl hover:bg-background-tertiary transition-colors">
-              <div className="w-12 h-12 mb-4 mx-auto bg-accent-primary/20 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-accent-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Rate & Review</h3>
-              <p className="text-text-secondary">Share your thoughts and see what others think.</p>
-            </div>
-          </div>
-        </main>
+      {/* Ambient blobs */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] bg-red-900/20 rounded-full blur-[120px] animate-blob" />
+        <div className="absolute top-[20%] right-[-10%] w-[35vw] h-[35vw] bg-blue-900/10 rounded-full blur-[100px] animate-blob animation-delay-2000" />
+        <div className="absolute bottom-[-10%] left-[20%] w-[45vw] h-[45vw] bg-purple-900/10 rounded-full blur-[120px] animate-blob animation-delay-4000" />
       </div>
+      {/* Noise */}
+      <div className="fixed inset-0 pointer-events-none opacity-[0.05] z-[1] mix-blend-overlay" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")` }} />
+      {/* Spotlight grid */}
+      <div className="fixed inset-0 pointer-events-none z-[2]" style={{ backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '4rem 4rem', maskImage: 'radial-gradient(circle 600px at var(--mouse-x, 50%) var(--mouse-y, 50%), black, transparent)', WebkitMaskImage: 'radial-gradient(circle 600px at var(--mouse-x, 50%) var(--mouse-y, 50%), black, transparent)' }} />
+      
+      {/* Navigation - use shared CinematicNav */}
+      <CinematicNav transparent />
+      
+      <main className="relative z-10 pt-24 min-h-screen flex flex-col"><HeroSection router={router} /></main>
+      <style jsx global>{`
+        @keyframes blob {0%{transform:translate(0,0) scale(1);}33%{transform:translate(30px,-50px) scale(1.1);}66%{transform:translate(-20px,20px) scale(.9);}100%{transform:translate(0,0) scale(1);}}
+        .animate-blob{animation:blob 10s infinite;}
+        .animation-delay-2000{animation-delay:2s;}
+        .animation-delay-4000{animation-delay:4s;}
+        .text-glitch{position:relative;}
+        .text-glitch:before,.text-glitch:after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%;background:#020202;}
+        .text-glitch:before{left:2px;text-shadow:-1px 0 #ff00c1;clip-path:inset(44% 0 61% 0);animation:glitch-anim 2.5s infinite linear alternate-reverse;}
+        .text-glitch:after{left:-2px;text-shadow:-1px 0 #00fff9;clip-path:inset(54% 0 21% 0);animation:glitch-anim2 3s infinite linear alternate-reverse;}
+        @keyframes glitch-anim{0%{clip-path:inset(86% 0 9% 0);}20%{clip-path:inset(16% 0 54% 0);}40%{clip-path:inset(48% 0 36% 0);}60%{clip-path:inset(6% 0 77% 0);}80%{clip-path:inset(93% 0 5% 0);}100%{clip-path:inset(23% 0 68% 0);}}
+        @keyframes glitch-anim2{0%{clip-path:inset(22% 0 35% 0);}20%{clip-path:inset(67% 0 11% 0);}40%{clip-path:inset(9% 0 83% 0);}60%{clip-path:inset(98% 0 2% 0);}80%{clip-path:inset(40% 0 17% 0);}100%{clip-path:inset(66% 0 16% 0);}}
+        .fade-up{animation:fadeUp .6s cubic-bezier(.16,1,.3,1) forwards;opacity:0;transform:translateY(20px);}
+        @keyframes fadeUp{to{opacity:1;transform:translateY(0);}}
+      `}</style>
     </div>
   );
 }

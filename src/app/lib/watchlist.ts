@@ -168,3 +168,13 @@ export async function removeFromWatchlist(itemId: string): Promise<boolean> {
     return false;
   }
 }
+
+export async function isInWatchlist(mediaId: string, mediaType: string): Promise<boolean> {
+  try {
+    const watchlist = await getWatchlist();
+    return watchlist.some(item => item.mediaId === mediaId && item.mediaType === mediaType);
+  } catch (error) {
+    console.error('Error checking watchlist:', error);
+    return false;
+  }
+}
