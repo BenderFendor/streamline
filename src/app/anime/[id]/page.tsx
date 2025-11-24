@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { fetchAnimeDetails } from '@/app/lib/api';
 import { addToWatchlist as addToWatchlistApi } from '@/app/lib/watchlist';
@@ -8,18 +8,19 @@ import Image from 'next/image';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 
 type AnimeDetailProps = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
 export default function AnimeDetailPage({ params }: AnimeDetailProps) {
   const router = useRouter();
+  const unwrappedParams = use(params);
   const [anime, setAnime] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [adding, setAdding] = useState(false);
-  const animeId = parseInt(params.id, 10);
+  const animeId = parseInt(unwrappedParams.id, 10);
 
   useEffect(() => {
     async function loadAnimeDetails() {
