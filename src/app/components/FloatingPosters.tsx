@@ -36,24 +36,25 @@ export default function FloatingPosters() {
 
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden bg-background-primary">
-      <div className="absolute inset-0 flex flex-wrap justify-center items-center gap-8 opacity-20">
+      <div className="absolute inset-0 flex flex-wrap justify-center items-center gap-10 opacity-[0.12]">
         {posters.map((poster, index) => {
-          const randomRotate = Math.random() * 20 - 10; // Random rotation between -10 and 10 degrees
-          const randomDelay = Math.random() * 5; // Random delay between 0 and 5s
-          const randomDuration = 15 + Math.random() * 10; // Random duration between 15 and 25s
+          const randomRotate = Math.random() * 16 - 8;
+          const randomDelay = Math.random() * 5;
+          const randomDuration = 20 + Math.random() * 15;
+          const randomScale = 0.9 + Math.random() * 0.2;
 
           return (
             <div
               key={poster.id}
-              className="relative w-48 h-72 transform-gpu transition-all duration-1000 ease-in-out hover:scale-110 hover:opacity-80"
+              className="relative w-44 h-64 transform-gpu transition-all duration-700 ease-out-expo hover:scale-110 hover:opacity-100 hover:z-10"
               style={{
-                animation: `float ${randomDuration}s ease-in-out ${randomDelay}s infinite`,
-                transform: `rotate(${randomRotate}deg)`,
+                animation: `posterFloat ${randomDuration}s ease-in-out ${randomDelay}s infinite`,
+                transform: `rotate(${randomRotate}deg) scale(${randomScale})`,
                 perspective: '1000px',
               }}
             >
               <div 
-                className="w-full h-full rounded-xl overflow-hidden shadow-2xl transition-transform duration-500 ease-in-out hover:rotate-y-12"
+                className="w-full h-full rounded-2xl overflow-hidden shadow-card transition-all duration-500 ease-out-expo hover:shadow-elevated group"
                 style={{
                   backfaceVisibility: 'hidden',
                   transformStyle: 'preserve-3d',
@@ -63,25 +64,27 @@ export default function FloatingPosters() {
                   src={poster.imageUrl}
                   alt={poster.title}
                   fill
-                  className="object-cover rounded-xl"
-                  sizes="(max-width: 192px) 100vw, 192px"
+                  className="object-cover rounded-2xl transition-transform duration-700 ease-out-expo group-hover:scale-105"
+                  sizes="(max-width: 176px) 100vw, 176px"
                   priority={index < 4}
                 />
+                {/* Subtle gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               </div>
             </div>
           );
         })}
       </div>
       <style jsx global>{`
-        @keyframes float {
+        @keyframes posterFloat {
           0%, 100% {
             transform: translateY(0) translateX(0);
           }
           25% {
-            transform: translateY(-20px) translateX(10px);
+            transform: translateY(-25px) translateX(15px);
           }
           50% {
-            transform: translateY(0) translateX(20px);
+            transform: translateY(5px) translateX(25px);
           }
           75% {
             transform: translateY(20px) translateX(10px);
@@ -92,10 +95,6 @@ export default function FloatingPosters() {
           syntax: '<angle>';
           initial-value: 0deg;
           inherits: false;
-        }
-
-        .hover\\:rotate-y-12:hover {
-          transform: rotateY(12deg);
         }
       `}</style>
     </div>
