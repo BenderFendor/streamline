@@ -82,14 +82,14 @@ function HeroSection({ router }: { router: ReturnType<typeof useRouter> }) {
         <div className="space-y-6">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-accent-primary/20 bg-accent-primary/5 text-xs tracking-widest uppercase text-accent-primary font-semibold mb-4 shadow-glow backdrop-blur-sm">
             <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-primary opacity-75" /><span className="relative inline-flex rounded-full h-2 w-2 bg-accent-primary" /></span>
-            System Online v2.5
+            Track your media seamlessly
           </div>
           <h1 data-text="Streamline" className="font-display text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight leading-[0.95] text-glitch">
             Streamline<br />
             <span className="text-gradient">Your Reality.</span>
           </h1>
           <p className="text-lg text-text-secondary max-w-xl mx-auto lg:mx-0 leading-relaxed font-normal">
-            Stop switching apps. Track your movies, TV shows, anime, and books in one centralized, brutally efficient dashboard.
+            Stop switching apps. Track your movies, TV shows and anime in one centralized, efficient dashboard.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
@@ -108,11 +108,9 @@ function HeroSection({ router }: { router: ReturnType<typeof useRouter> }) {
         <div className="absolute inset-0 bg-gradient-to-tr from-accent-primary/15 to-accent-tertiary/15 blur-[100px] rounded-full animate-pulse-slow" />
         <TiltCard className="absolute top-0 right-0 w-[60%] z-20">
           <div className="relative rounded-2xl overflow-hidden border border-white/[0.08] bg-[#111] shadow-elevated">
-            <div className="aspect-[2/3] relative bg-[#a81e1e]">
-              <img src="https://images.unsplash.com/photo-1594909122845-11baa439b7bf?q=80&w=2070&auto=format&fit=crop" alt="Poster" className="w-full h-full object-cover mix-blend-overlay opacity-60 grayscale transition-all duration-700" />
-              <div className="absolute inset-0 flex flex-col justify-between p-6">
-                <div className="text-yellow-400 font-display text-4xl sm:text-5xl font-bold tracking-tight drop-shadow-2xl text-center mt-4 uppercase border-4 border-yellow-400 p-2 -rotate-2">PULP<br />FICTION</div>
-              </div>
+            <div className="aspect-[2/3] relative bg-[#1a1a1a]">
+              <img src="https://image.tmdb.org/t/p/w500/v7TaX8kXMXs5yFFGR41guUDNcnB.jpg" alt="Kill Bill Vol. 1" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             </div>
             <div className="absolute bottom-4 left-4 right-4 glass-card p-3 rounded-xl flex items-center justify-between">
               <div className="flex items-center gap-2">

@@ -202,15 +202,12 @@ export default function WatchlistPage() {
         <div className="flex-1 relative w-full max-w-xl">
           <div className="relative aspect-square md:aspect-[4/3]" style={{ transform: `translate(${mousePos.x * -1}px, ${mousePos.y * -1}px)` }}>
             <div className="absolute inset-0 bg-red-600/20 blur-[90px] rounded-full opacity-40" />
-            {/* Pulp Fiction style anchor poster */}
+            {/* Django Unchained style anchor poster */}
             <div className="absolute top-0 right-0 w-[60%] shadow-2xl" style={{ transform: 'rotate(4deg)' }}>
               <div className="relative rounded-lg overflow-hidden border border-white/10 bg-[#111]">
-                <div className="aspect-[2/3] relative bg-[#a81e1e]">
-                  <img src="https://images.unsplash.com/photo-1594909122845-11baa439b7bf?q=80&w=2070&auto=format&fit=crop" alt="Cinematic Poster" className="w-full h-full object-cover mix-blend-overlay opacity-50" />
-                  <div className="absolute inset-0 flex flex-col justify-between p-4">
-                    <div className="text-yellow-400 font-serif text-4xl font-bold tracking-tighter drop-shadow-lg text-center mt-4 uppercase">PULP<br/>FICTION</div>
-                    <div className="text-center text-xs text-yellow-100 font-mono tracking-widest uppercase mb-4 opacity-80">Anchor Poster</div>
-                  </div>
+                <div className="aspect-[2/3] relative bg-[#1a1a1a]">
+                  <img src="https://image.tmdb.org/t/p/w500/7oWY8VDWW7thTzWh3OKYRkWUlD5.jpg" alt="Django Unchained Poster" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                 </div>
                 <div className="absolute bottom-4 left-4 right-4 bg-black/80 backdrop-blur-md p-3 rounded border border-white/10 flex items-center justify-between">
                   <div className="flex items-center gap-2"><div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" /><span className="text-xs font-bold uppercase tracking-wider">Watching Now</span></div>
