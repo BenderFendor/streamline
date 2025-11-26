@@ -345,7 +345,7 @@ export default function ShowsPage() {
               className="group relative cursor-pointer rounded-xl overflow-hidden border border-white/10 bg-[#0f0f0f] shadow-lg hover:shadow-2xl hover:shadow-red-900/10 transition-all duration-300 hover:-translate-y-1 interactive"
             >
               {/* Poster */}
-              <div className="relative aspect-[2/3]">
+              <div className="relative aspect-[2/3] overflow-hidden">
                 {show.poster_path ? (
                   <Image
                     src={`https://image.tmdb.org/t/p/w500${show.poster_path}`}

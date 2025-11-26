@@ -399,7 +399,7 @@ export default function AnimePage() {
                 className="group relative cursor-pointer rounded-xl overflow-hidden border border-white/10 bg-[#0f0f0f] shadow-lg hover:shadow-2xl hover:shadow-red-900/10 transition-all duration-300 hover:-translate-y-1 interactive"
               >
                 {/* Poster */}
-                <div className="relative aspect-[2/3]">
+                <div className="relative aspect-[2/3] overflow-hidden">
                   <Image
                     src={anime.coverImage || '/placeholder-poster.jpg'}
                     alt={anime.title}
@@ -411,21 +411,22 @@ export default function AnimePage() {
                   {/* Gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   
-                  {/* Format badge */}
-                  <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-medium">
-                    {anime.format}
+                  {/* Top left badges */}
+                  <div className="absolute top-2 left-2 flex items-center gap-1.5">
+                    <div className="bg-black/60 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-medium">
+                      {anime.format}
+                    </div>
+                    {anime.episodes && (
+                      <div className="bg-black/60 backdrop-blur-sm px-2 py-1 rounded-md text-xs">
+                        {anime.episodes} eps
+                      </div>
+                    )}
                   </div>
                   
-                  {/* Episode count */}
-                  {anime.episodes && (
-                    <div className="absolute top-2 right-12 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-md text-xs">
-                      {anime.episodes} eps
-                    </div>
-                  )}
-                  
-                  {/* Airing badge */}
+                  {/* Airing badge - bottom left, always visible for airing shows */}
                   {anime.nextAiring && (
-                    <div className="absolute bottom-12 left-2 bg-green-600/80 backdrop-blur-sm px-2 py-1 rounded-md text-xs">
+                    <div className="absolute bottom-2 left-2 bg-green-600/90 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                       Ep {anime.nextAiring.episode} in {formatTimeUntilAiring(anime.nextAiring.timeUntilAiring)}
                     </div>
                   )}
