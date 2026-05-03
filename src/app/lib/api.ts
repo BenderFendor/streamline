@@ -96,8 +96,6 @@ export async function getPosterData(): Promise<MediaItem[]> {
     // Fetch trending movies
     // Fetch trending movies with detailed error logging
     const movieUrl = `${TMDB_BASE_URL}/trending/movie/week`
-    console.debug('Fetching movies from:', movieUrl)
-    console.debug('Using fetch options:', JSON.stringify(tmdbFetchOptions))
     
     const movieResponse = await fetch(movieUrl, tmdbFetchOptions)
     if (!movieResponse.ok) {
@@ -121,7 +119,6 @@ export async function getPosterData(): Promise<MediaItem[]> {
     // Fetch trending TV shows
     // Fetch trending TV shows with detailed error logging
     const tvUrl = `${TMDB_BASE_URL}/trending/tv/week`
-    console.debug('Fetching TV shows from:', tvUrl)
     
     const tvResponse = await fetch(tvUrl, tmdbFetchOptions)
     if (!tvResponse.ok) {
@@ -247,8 +244,6 @@ export async function fetchShows(params: ShowsParams): Promise<ShowsResponse> {
   }
   
   try {
-    console.debug(`Fetching shows from: ${url}?${queryParams.toString()}`)
-    
     const response = await fetch(`${url}?${queryParams.toString()}`, tmdbFetchOptions)
     if (!response.ok) {
       const errorText = await response.text()
