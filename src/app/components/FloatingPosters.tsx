@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Image from 'next/image';
 import { getPosterData } from '../lib/api';
 
@@ -30,6 +30,16 @@ export default function FloatingPosters() {
     loadPosters();
   }, []);
 
+  const posterStyles = useMemo(() => {
+    return posters.map((poster) => ({
+      id: poster.id,
+      rotate: (poster.id.toString().charCodeAt(0) % 16) - 8,
+      delay: (poster.id.toString().charCodeAt(1) || 0) % 5,
+      duration: 20 + ((poster.id.toString().charCodeAt(2) || 0) % 15),
+      scale: 0.9 + ((poster.id.toString().charCodeAt(3) || 0) % 20) / 100,
+    }));
+  }, [posters]);
+
   if (isLoading) {
     return <div className="w-full h-full bg-background-primary" />;
   }
@@ -38,18 +48,15 @@ export default function FloatingPosters() {
     <div className="fixed inset-0 -z-10 overflow-hidden bg-background-primary">
       <div className="absolute inset-0 flex flex-wrap justify-center items-center gap-10 opacity-[0.12]">
         {posters.map((poster, index) => {
-          const randomRotate = Math.random() * 16 - 8;
-          const randomDelay = Math.random() * 5;
-          const randomDuration = 20 + Math.random() * 15;
-          const randomScale = 0.9 + Math.random() * 0.2;
+          const style = posterStyles[index];
 
           return (
             <div
               key={poster.id}
               className="relative w-44 h-64 transform-gpu transition-all duration-700 ease-out-expo hover:scale-110 hover:opacity-100 hover:z-10"
               style={{
-                animation: `posterFloat ${randomDuration}s ease-in-out ${randomDelay}s infinite`,
-                transform: `rotate(${randomRotate}deg) scale(${randomScale})`,
+                animation: `posterFloat ${style.duration}s ease-in-out ${style.delay}s infinite`,
+                transform: `rotate(${style.rotate}deg) scale(${style.scale})`,
                 perspective: '1000px',
               }}
             >

@@ -21,12 +21,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  eslint: {
-    // Warning: This allows production builds to successfully complete even with ESLint errors
-    ignoreDuringBuilds: true,
-  },
   typescript: {
-    // Ignore TypeScript errors during build
     ignoreBuildErrors: true,
   },
 };

@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# agent-summary -- print project orientation for agents.
+# Streamline: Next.js 15 + TypeScript 5 + React 19 + Tailwind CSS 3.4.
+set -euo pipefail
+
+echo "== Agent Summary =="
+echo "Root: $(pwd)"
+echo
+
+echo "--- Stack ---"
+echo "  Next.js 15.1.7 (App Router)"
+echo "  TypeScript 5 (strict mode)"
+echo "  React 19"
+echo "  Tailwind CSS 3.4"
+echo "  npm"
+echo
+
+echo "--- Important files ---"
+for f in AGENTS.md README.md package.json tsconfig.json next.config.ts eslint.config.mjs tailwind.config.ts; do
+  if [[ -f "$f" ]]; then echo "  $f"; fi
+done
+
+echo
+echo "--- Package scripts ---"
+node -e "const p=require('./package.json'); const s=p.scripts||{}; Object.keys(s).forEach(k=>console.log('  '+k+': '+s[k]))" 2>/dev/null || true
+
+echo
+echo "--- Source structure ---"
+echo "  src/app/          -- Next.js App Router pages and layouts"
+echo "  src/app/components/ -- Shared UI components"
+echo "  src/app/lib/      -- API functions, types, utilities"
+echo "  src/app/api/      -- API routes (auth, watchlist)"
+echo
+
+echo "--- Agent docs ---"
+find docs/agent -maxdepth 2 -type f 2>/dev/null | sort | while read f; do echo "  $f"; done || echo "  (none)"
+
+echo
+echo "--- Agent harness ---"
+for f in .agent/risk-tiers.yaml .agent/invariants.yaml .agent/task-spec-template.yaml .agent/traces/; do
+  if [[ -f "$f" ]] || [[ -d "$f" ]]; then echo "  $f"; fi
+done
+
+echo
+echo "--- Verification ---"
+echo "  scripts/self-test    -- lint + typecheck + build"
+echo "  tools/verify.sh      -- alternative verifier"
+echo
+echo "== Agent summary complete =="

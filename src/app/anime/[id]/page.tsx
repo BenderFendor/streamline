@@ -8,6 +8,70 @@ import Image from 'next/image';
 import PageWrapper from '@/app/components/PageWrapper';
 import CinematicNav from '@/app/components/CinematicNav';
 
+type AnimeDetailEdge = {
+  node: {
+    id: number;
+    name?: { full: string; native?: string };
+    title?: { english?: string; romaji: string; native?: string };
+    coverImage?: { large: string; extraLarge?: string };
+    format?: string;
+    status?: string;
+    averageScore?: number;
+    type?: string;
+    siteUrl?: string;
+    image?: { large: string };
+  };
+  role?: string;
+  relationType?: string;
+  voiceActors?: Array<{ id: number; name: { full: string; native?: string }; language?: string; image?: { large: string }; siteUrl?: string }>;
+  isMain?: boolean;
+};
+
+type AnimeRecEdge = {
+  node: {
+    mediaRecommendation: {
+      id: number;
+      title: { english?: string; romaji: string };
+      coverImage?: { large: string };
+      format?: string;
+      status?: string;
+      averageScore?: number;
+      popularity?: number;
+      siteUrl?: string;
+    };
+    rating?: number;
+    userRating?: number;
+  };
+};
+
+type AnimeExternalLink = {
+  id: number;
+  url: string;
+  site: string;
+};
+
+type AnimeDetail = {
+  id: number;
+  title: { english?: string; romaji: string; native?: string };
+  episodes?: number;
+  status: string;
+  format: string;
+  genres: string[];
+  description: string;
+  averageScore?: number;
+  duration?: number;
+  coverImage: { extraLarge: string };
+  bannerImage?: string;
+  season?: string;
+  seasonYear?: number;
+  trailer?: { id: string; site: string; thumbnail: string };
+  studios?: { edges: AnimeDetailEdge[] };
+  characters?: { edges: AnimeDetailEdge[] };
+  relations?: { edges: AnimeDetailEdge[] };
+  recommendations?: { edges: AnimeRecEdge[] };
+  externalLinks?: AnimeExternalLink[];
+};
+
 type AnimeDetailProps = {
   params: Promise<{
     id: string;
@@ -17,7 +81,7 @@ type AnimeDetailProps = {
 export default function AnimeDetailPage({ params }: AnimeDetailProps) {
   const router = useRouter();
   const unwrappedParams = use(params);
-  const [anime, setAnime] = useState<any>(null);
+  const [anime, setAnime] = useState<AnimeDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [adding, setAdding] = useState(false);
@@ -29,7 +93,7 @@ export default function AnimeDetailPage({ params }: AnimeDetailProps) {
       try {
         setLoading(true);
         const data = await fetchAnimeDetails(animeId);
-        setAnime(data);
+        setAnime(data as unknown as AnimeDetail);
         setError('');
         
         // Check watchlist status
@@ -79,11 +143,6 @@ export default function AnimeDetailPage({ params }: AnimeDetailProps) {
     }
   };
 
-  const formatDate = (date: { year?: number; month?: number; day?: number }) => {
-    if (!date || !date.year) return 'Unknown';
-    return `${date.month}/${date.day}/${date.year}`;
-  };
-
   if (loading) {
     return (
       <PageWrapper showFloatingPosters={false}>
@@ -118,8 +177,8 @@ export default function AnimeDetailPage({ params }: AnimeDetailProps) {
   }
 
   const title = anime.title.english || anime.title.romaji;
-  const studios = anime.studios?.edges?.filter((edge: any) => edge.isMain)?.map((edge: any) => edge.node.name);
-  const mainCharacters = anime.characters?.edges?.filter((edge: any) => edge.role === 'MAIN')?.slice(0, 6);
+  const studios = anime.studios?.edges?.filter((edge: AnimeDetailEdge) => edge.isMain)?.map((edge: AnimeDetailEdge) => edge.node.name);
+  const mainCharacters = anime.characters?.edges?.filter((edge: AnimeDetailEdge) => edge.role === 'MAIN')?.slice(0, 6);
   const recommendations = anime.recommendations?.edges?.slice(0, 12);
   const relations = anime.relations?.edges;
 
@@ -283,23 +342,25 @@ export default function AnimeDetailPage({ params }: AnimeDetailProps) {
           <section className="mt-16">
             <h2 className="text-2xl font-bold mb-6">Main Characters</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {mainCharacters.map((edge: any) => {
+              {mainCharacters.map((edge: AnimeDetailEdge) => {
                 const character = edge.node;
                 const voiceActor = edge.voiceActors?.[0];
                 
                 return (
                   <div key={character.id} className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
                     <div className="relative w-16 h-20 rounded-lg overflow-hidden flex-shrink-0">
-                      <Image
-                        src={character.image.large}
-                        alt={character.name.full}
-                        fill
-                        className="object-cover"
-                      />
+                      {character.image?.large && (
+                        <Image
+                          src={character.image.large}
+                          alt={character.name?.full ?? 'Character'}
+                          fill
+                          className="object-cover"
+                        />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold truncate">{character.name.full}</h3>
-                      <p className="text-sm text-gray-500">{edge.role}</p>
+                      <h3 className="font-semibold truncate">{character.name?.full ?? 'Unknown'}</h3>
+                      <p className="text-sm text-gray-500">{edge.role ?? ''}</p>
                       {voiceActor && (
                         <p className="text-sm text-gray-500 truncate mt-1">
                           VA: {voiceActor.name.full}
@@ -318,7 +379,7 @@ export default function AnimeDetailPage({ params }: AnimeDetailProps) {
           <section className="mt-16">
             <h2 className="text-2xl font-bold mb-6">Related</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {relations.slice(0, 6).map((edge: any) => {
+              {relations.slice(0, 6).map((edge: AnimeDetailEdge) => {
                 const related = edge.node;
                 if (related.type !== 'ANIME') return null;
                 
@@ -332,7 +393,7 @@ export default function AnimeDetailPage({ params }: AnimeDetailProps) {
                       {related.coverImage?.large && (
                         <Image
                           src={related.coverImage.large}
-                          alt={related.title.romaji}
+                          alt={related.title?.romaji ?? 'Related'}
                           fill
                           className="object-cover transition-transform duration-500 group-hover:scale-105"
                           sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 16vw"
@@ -342,10 +403,10 @@ export default function AnimeDetailPage({ params }: AnimeDetailProps) {
                     </div>
                     <div className="p-3">
                       <h3 className="font-medium text-sm truncate group-hover:text-red-400 transition-colors">
-                        {related.title.english || related.title.romaji}
+                        {related.title?.english || related.title?.romaji || 'Untitled'}
                       </h3>
                       <p className="text-xs text-gray-500 mt-1">
-                        {edge.relationType.replace(/_/g, ' ')}
+                        {edge.relationType?.replace(/_/g, ' ') ?? ''}
                       </p>
                     </div>
                   </div>
@@ -360,7 +421,7 @@ export default function AnimeDetailPage({ params }: AnimeDetailProps) {
           <section className="mt-16 pb-20">
             <h2 className="text-2xl font-bold mb-6">You Might Also Like</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {recommendations.map((edge: any) => {
+              {recommendations.map((edge: AnimeRecEdge) => {
                 const rec = edge.node.mediaRecommendation;
                 
                 return (
@@ -406,7 +467,7 @@ export default function AnimeDetailPage({ params }: AnimeDetailProps) {
           <section className="pb-20">
             <h2 className="text-2xl font-bold mb-6">External Links</h2>
             <div className="flex flex-wrap gap-3">
-              {anime.externalLinks.map((link: any) => (
+              {anime.externalLinks.map((link: AnimeExternalLink) => (
                 <a
                   key={link.id}
                   href={link.url}

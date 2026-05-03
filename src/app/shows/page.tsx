@@ -153,12 +153,15 @@ export default function ShowsPage() {
   };
 
   useEffect(() => {
+    /* eslint-disable-next-line react-hooks/set-state-in-effect */
     setPage(1);
     setShows([]);
   }, [mediaType, category, debouncedQuery, yearFilter, genreFilter]);
 
   useEffect(() => {
+    /* eslint-disable-next-line react-hooks/set-state-in-effect */
     loadShows();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, mediaType, category, debouncedQuery, yearFilter, genreFilter]);
 
   const navigateToShow = (show: Show) => {

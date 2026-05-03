@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import FloatingPosters from './components/FloatingPosters';
 import CinematicNav from './components/CinematicNav';
 import { ChevronRight } from 'lucide-react';
@@ -109,7 +110,7 @@ function HeroSection({ router }: { router: ReturnType<typeof useRouter> }) {
         <TiltCard className="absolute top-0 right-0 w-[60%] z-20">
           <div className="relative rounded-2xl overflow-hidden border border-white/[0.08] bg-[#111] shadow-elevated">
             <div className="aspect-[2/3] relative bg-[#1a1a1a]">
-              <img src="https://image.tmdb.org/t/p/w500/v7TaX8kXMXs5yFFGR41guUDNcnB.jpg" alt="Kill Bill Vol. 1" className="w-full h-full object-cover" />
+              <Image src="https://image.tmdb.org/t/p/w500/v7TaX8kXMXs5yFFGR41guUDNcnB.jpg" alt="Kill Bill Vol. 1" fill className="object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             </div>
             <div className="absolute bottom-4 left-4 right-4 glass-card p-3 rounded-xl flex items-center justify-between">

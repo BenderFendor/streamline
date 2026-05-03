@@ -78,8 +78,9 @@ export default function ShowDetailsPage() {
         const type = urlParams.get('type') as 'movie' | 'tv' || 'movie';
         setMediaType(type);
         
-        const data = await fetchShowDetails(params.id, type);
-        setShow(data);
+        const idParam = Array.isArray(params.id) ? params.id[0] : params.id;
+        const data = await fetchShowDetails(idParam, type);
+        setShow(data as unknown as ShowDetails);
         setError(null);
         
         // Check watchlist status
@@ -113,7 +114,9 @@ export default function ShowDetailsPage() {
         mediaType,
         title,
         imageUrl: show.poster_path ? `https://image.tmdb.org/t/p/w500${show.poster_path}` : undefined,
-        year: new Date(show.release_date || show.first_air_date || '').getFullYear() || undefined,
+        year: show.release_date || show.first_air_date
+          ? String(new Date(show.release_date || show.first_air_date || '').getFullYear())
+          : undefined,
         progress: 0,
         totalEpisodes: show.number_of_episodes,
       };

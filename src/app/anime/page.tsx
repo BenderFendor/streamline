@@ -113,12 +113,18 @@ export default function AnimePage() {
   }, []);
 
   useEffect(() => {
-    loadAnime();
+    /* eslint-disable-next-line react-hooks/set-state-in-effect */
+    loadAnime(true);
     loadWatchlist();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (page > 1) loadAnime();
+    if (page > 1) {
+      /* eslint-disable-next-line react-hooks/set-state-in-effect */
+      loadAnime(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
   const handleFilterChange = (key: keyof FilterValues, value: string) => {
@@ -498,7 +504,7 @@ export default function AnimePage() {
 
         {/* End of results */}
         {!loading && !hasMore && animeList.length > 0 && (
-          <p className="text-center text-gray-500 py-8">You've reached the end of the results</p>
+          <p className="text-center text-gray-500 py-8">You&apos;ve reached the end of the results</p>
         )}
 
         {/* No results */}

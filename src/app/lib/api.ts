@@ -4,9 +4,7 @@ import type { WatchlistItem } from './watchlist';
 // API Base URLs and Keys
 const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3'
-const JIKAN_BASE_URL = 'https://api.jikan.moe/v4'
 const ANILIST_API_URL = 'https://graphql.anilist.co'
-const OPEN_LIBRARY_BASE_URL = 'https://openlibrary.org'
 
 const tmdbFetchOptions = {
   headers: {
@@ -118,6 +116,7 @@ export async function getPosterData(): Promise<MediaItem[]> {
     }
     const movieData = await movieResponse.json()
     if (!movieData?.results) throw new Error('Invalid movie data format')
+    const movieDataResults: Array<{ id: number; title: string; poster_path: string }> = movieData.results
 
     // Fetch trending TV shows
     // Fetch trending TV shows with detailed error logging
@@ -141,6 +140,7 @@ export async function getPosterData(): Promise<MediaItem[]> {
     }
     const tvData = await tvResponse.json()
     if (!tvData?.results) throw new Error('Invalid TV data format')
+    const tvDataResults: Array<{ id: number; name: string; poster_path: string }> = tvData.results
 
     // Fetch trending anime using AniList API
     const animeQuery = `
@@ -176,27 +176,28 @@ export async function getPosterData(): Promise<MediaItem[]> {
     if (!animeData?.data?.Page?.media) {
       throw new Error('Invalid anime data format');
     }
+    const animeMediaItems: Array<{ id: number; title: { english: string | null; romaji: string }; coverImage: { extraLarge: string } }> = animeData.data.Page.media;
 
     // Process and combine all data
-    const movies = movieData.results.map(item => ({
+    const movies = movieDataResults.map(item => ({
       id: item.id,
       title: item.title,
       imageUrl: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
-      mediaType: 'movie',
+      mediaType: 'movie' as const,
     })) || []
 
-    const tvShows = tvData.results.map(item => ({
+    const tvShows = tvDataResults.map(item => ({
       id: item.id,
       title: item.name || '',
       imageUrl: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
-      mediaType: 'tv',
+      mediaType: 'tv' as const,
     })) || []
 
-    const anime = animeData.data.Page.media.map(item => ({
+    const anime = animeMediaItems.map(item => ({
       id: item.id,
       title: item.title.english || item.title.romaji,
       imageUrl: item.coverImage.extraLarge,
-      mediaType: 'anime',
+      mediaType: 'anime' as const,
     })) || []
 
     // Combine and shuffle for varied content
@@ -220,7 +221,7 @@ export async function fetchShows(params: ShowsParams): Promise<ShowsResponse> {
   const { mediaType, category, genre, query, page, id } = params
   
   let url: string
-  let queryParams = new URLSearchParams({
+  const queryParams = new URLSearchParams({
     language: 'en-US',
     page: page.toString(),
     include_adult: 'false'
@@ -277,7 +278,7 @@ export async function fetchAnime(params: AnimeParams): Promise<AnimeResponse> {
   const { sort = 'TRENDING_DESC', format, status, search, genre, page = 1 } = params;
   
   // Build the GraphQL query
-  let query = `
+  const query = `
     query ($page: Int, $perPage: Int, $search: String, $format: MediaFormat, $status: MediaStatus, $genre: String, $sort: [MediaSort]) {
       Page(page: $page, perPage: $perPage) {
         pageInfo {
@@ -321,7 +322,7 @@ export async function fetchAnime(params: AnimeParams): Promise<AnimeResponse> {
   `;
   
   // Build variables object
-  const variables = {
+  const variables: Record<string, unknown> = {
     page: page,
     perPage: 20,
     sort: [sort]
@@ -358,29 +359,44 @@ export async function fetchAnime(params: AnimeParams): Promise<AnimeResponse> {
     }
 
     const pageInfo = data.data.Page.pageInfo;
-    const mediaItems = data.data.Page.media;
+    const mediaItems: Array<{
+      id: number;
+      title: { english: string | null; romaji: string; native: string };
+      coverImage: { large: string; extraLarge: string };
+      bannerImage: string | null;
+      episodes: number | null;
+      status: string;
+      format: string;
+      genres: string[];
+      averageScore: number | null;
+      popularity: number | null;
+      season: string | null;
+      seasonYear: number | null;
+      studios: { nodes: Array<{ name: string }> } | null;
+      nextAiringEpisode: { episode: number; timeUntilAiring: number } | null;
+    }> = data.data.Page.media;
     
     // Transform the data to match our expected format
     return {
       page: pageInfo.currentPage,
-      total_pages: pageInfo.lastPage || 500, // AniList typically has a limit
+      total_pages: pageInfo.lastPage || 500,
       hasNextPage: pageInfo.hasNextPage,
       results: mediaItems.map(item => ({
         id: item.id,
         title: item.title.english || item.title.romaji,
-        englishTitle: item.title.english,
+        englishTitle: item.title.english ?? undefined,
         nativeTitle: item.title.native,
         coverImage: item.coverImage.extraLarge || item.coverImage.large,
-        bannerImage: item.bannerImage,
-        episodes: item.episodes,
+        bannerImage: item.bannerImage ?? undefined,
+        episodes: item.episodes ?? undefined,
         status: item.status,
         format: item.format,
         genres: item.genres,
-        averageScore: item.averageScore,
-        popularity: item.popularity,
-        season: item.season,
-        year: item.seasonYear,
-        studios: item.studios?.nodes?.map(studio => studio.name) || [],
+        averageScore: item.averageScore ?? undefined,
+        popularity: item.popularity ?? undefined,
+        season: item.season ?? undefined,
+        year: item.seasonYear ?? undefined,
+        studios: item.studios?.nodes?.map((studio: { name: string }) => studio.name) || [],
         nextAiring: item.nextAiringEpisode ? {
           episode: item.nextAiringEpisode.episode,
           timeUntilAiring: item.nextAiringEpisode.timeUntilAiring
@@ -394,7 +410,7 @@ export async function fetchAnime(params: AnimeParams): Promise<AnimeResponse> {
 }
 
 // Fetch specific anime details by ID
-export async function fetchAnimeDetails(id: number): Promise<any> {
+export async function fetchAnimeDetails(id: number): Promise<Record<string, unknown>> {
   const query = `
     query ($id: Int) {
       Media(id: $id, type: ANIME) {
@@ -697,7 +713,7 @@ export async function fetchWatchlist(): Promise<WatchlistItem[]> {
 }
 
 // Fetch details for a specific show (movie or TV)
-export async function fetchShowDetails(id: string | number, mediaType?: string | null): Promise<any> {
+export async function fetchShowDetails(id: string | number, mediaType?: string | null): Promise<Record<string, unknown>> {
   // If media type is specified, try that first
   if (mediaType) {
     try {
@@ -760,7 +776,7 @@ export async function fetchShowDetails(id: string | number, mediaType?: string |
 }
 
 // Fetch details for a person/cast member
-export async function fetchPersonDetails(id: string | number): Promise<any> {
+export async function fetchPersonDetails(id: string | number): Promise<Record<string, unknown>> {
   try {
     const response = await fetch(
       `${TMDB_BASE_URL}/person/${id}?append_to_response=combined_credits,images`,

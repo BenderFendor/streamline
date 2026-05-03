@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -8,15 +8,42 @@ import { fetchPersonDetails } from '../../lib/api';
 import PageWrapper from '../../components/PageWrapper';
 import CinematicNav from '../../components/CinematicNav';
 
-interface PersonPageProps {
-  params: {
-    id: string;
+interface PersonCredit {
+  id: number;
+  title?: string;
+  name?: string;
+  poster_path?: string;
+  release_date?: string;
+  first_air_date?: string;
+  media_type: string;
+  popularity: number;
+  character?: string;
+  credit_id?: string;
+}
+
+interface PersonData {
+  name: string;
+  profile_path?: string;
+  known_for_department?: string;
+  birthday?: string;
+  deathday?: string;
+  place_of_birth?: string;
+  biography?: string;
+  combined_credits?: {
+    cast: PersonCredit[];
   };
+}
+
+interface PersonPageProps {
+  params: Promise<{
+    id: string;
+  }>;
 }
 
 export default function PersonPage({ params }: PersonPageProps) {
   const router = useRouter();
-  const [person, setPerson] = useState<any>(null);
+  const unwrappedParams = use(params);
+  const [person, setPerson] = useState<PersonData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFullBio, setShowFullBio] = useState(false);
@@ -24,8 +51,8 @@ export default function PersonPage({ params }: PersonPageProps) {
   useEffect(() => {
     const loadPerson = async () => {
       try {
-        const data = await fetchPersonDetails(params.id);
-        setPerson(data);
+        const data = await fetchPersonDetails(unwrappedParams.id);
+        setPerson(data as unknown as PersonData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load person details');
       } finally {
@@ -34,7 +61,7 @@ export default function PersonPage({ params }: PersonPageProps) {
     };
 
     loadPerson();
-  }, [params.id]);
+  }, [unwrappedParams.id]);
 
   const handleShowClick = (id: number, mediaType: string) => {
     router.push(`/shows/${id}?type=${mediaType}`);
@@ -76,11 +103,11 @@ export default function PersonPage({ params }: PersonPageProps) {
   if (!person) return null;
 
   const knownFor = person.combined_credits?.cast
-    ?.sort((a: any, b: any) => b.popularity - a.popularity)
+    ?.sort((a: PersonCredit, b: PersonCredit) => b.popularity - a.popularity)
     .slice(0, 12) || [];
 
   const actingCredits = person.combined_credits?.cast
-    ?.sort((a: any, b: any) => {
+    ?.sort((a: PersonCredit, b: PersonCredit) => {
       const dateA = new Date(a.release_date || a.first_air_date || '');
       const dateB = new Date(b.release_date || b.first_air_date || '');
       return dateB.getTime() - dateA.getTime();
@@ -195,7 +222,7 @@ export default function PersonPage({ params }: PersonPageProps) {
               <span className="text-sm text-gray-500">{knownFor.length} popular titles</span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {knownFor.map((credit: any) => (
+              {knownFor.map((credit: PersonCredit) => (
                 <div
                   key={`${credit.id}-${credit.media_type}`}
                   onClick={() => handleShowClick(credit.id, credit.media_type)}
@@ -205,7 +232,7 @@ export default function PersonPage({ params }: PersonPageProps) {
                     {credit.poster_path ? (
                       <Image
                         src={`https://image.tmdb.org/t/p/w300${credit.poster_path}`}
-                        alt={credit.title || credit.name}
+                        alt={credit.title || credit.name || ''}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                         sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 16vw"
@@ -224,7 +251,7 @@ export default function PersonPage({ params }: PersonPageProps) {
                       {credit.title || credit.name}
                     </h3>
                     <p className="text-xs text-gray-500 mt-1">
-                      {new Date(credit.release_date || credit.first_air_date || '').getFullYear() || 'N/A'}
+                       {new Date(credit.release_date || credit.first_air_date || '').getFullYear() || 'N/A'}
                     </p>
                   </div>
                 </div>
@@ -241,9 +268,9 @@ export default function PersonPage({ params }: PersonPageProps) {
               <span className="text-sm text-gray-500">{actingCredits.length} credits</span>
             </div>
             <div className="space-y-3">
-              {actingCredits.map((credit: any) => (
+              {actingCredits.map((credit: PersonCredit) => (
                 <div
-                  key={`${credit.id}-${credit.media_type}-${credit.credit_id || Math.random()}`}
+                  key={`${credit.id}-${credit.media_type}-${credit.credit_id || credit.id}`}
                   onClick={() => handleShowClick(credit.id, credit.media_type)}
                   className="flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 cursor-pointer transition-all duration-300 group interactive"
                 >
@@ -251,7 +278,7 @@ export default function PersonPage({ params }: PersonPageProps) {
                     {credit.poster_path ? (
                       <Image
                         src={`https://image.tmdb.org/t/p/w92${credit.poster_path}`}
-                        alt={credit.title || credit.name}
+                        alt={credit.title || credit.name || ''}
                         fill
                         className="object-cover"
                         sizes="64px"

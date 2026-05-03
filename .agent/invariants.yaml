@@ -1,0 +1,33 @@
+# Invariant Manifest
+# Behaviors that must survive any patch. Violations are BLOCK-level.
+
+extracted:
+  # All TMDB API calls must include Authorization header from tmdbFetchOptions.
+  # Mined from: src/app/lib/api.ts uses tmdbFetchOptions for all TMDB requests.
+
+  # All image URLs for TMDB must use https://image.tmdb.org/t/p/ path.
+  # Mined from: all poster_path references prepend this base URL.
+
+  # next.config.ts remotePatterns must include: image.tmdb.org, cdn.myanimelist.net, s4.anilist.co.
+  # Mined from: images.remotePatterns array in next.config.ts.
+
+  # Watchlist is in-memory per server instance. No persistence guarantee.
+  # Mined from: src/app/api/watchlist/route.ts uses module-level array.
+
+  # AniList API uses GraphQL POST requests to https://graphql.anilist.co.
+  # Mined from: src/app/lib/api.ts ANILIST_API_URL constant.
+
+  # TMDB API key must be exposed as NEXT_PUBLIC_TMDB_API_KEY (client-accessible prefix).
+  # Mined from: process.env.NEXT_PUBLIC_TMDB_API_KEY in api.ts.
+
+authored:
+  # API error responses must not leak stack traces in production.
+  # Image domains added to next.config.ts must use HTTPS only.
+  # API key must never be committed to the repository.
+  # Build flags (ignoreBuildErrors, ignoreDuringBuilds) must not be removed without
+  # first fixing all underlying errors.
+
+verified_by:
+  - TypeScript typechecker (API response shapes)
+  - ESLint (code quality)
+  - npm run build (compilation)

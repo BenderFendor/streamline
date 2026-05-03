@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { fetchWatchlist } from '@/app/lib/api';
 import { removeFromWatchlist, updateWatchlistItem, type WatchlistItem } from '@/app/lib/watchlist';
 import PageWrapper from '@/app/components/PageWrapper';
@@ -134,7 +135,7 @@ export default function WatchlistPage() {
   };
 
   const sortedAndFilteredWatchlist = useMemo(() => {
-    let items = filter === 'all' ? watchlist : watchlist.filter(item => item.mediaType === filter);
+    const items = filter === 'all' ? watchlist : watchlist.filter(item => item.mediaType === filter);
     switch (sortBy) {
       case 'title':
         return [...items].sort((a, b) => a.title.localeCompare(b.title));
@@ -206,7 +207,7 @@ export default function WatchlistPage() {
             <div className="absolute top-0 right-0 w-[60%] shadow-2xl" style={{ transform: 'rotate(4deg)' }}>
               <div className="relative rounded-lg overflow-hidden border border-white/10 bg-[#111]">
                 <div className="aspect-[2/3] relative bg-[#1a1a1a]">
-                  <img src="https://image.tmdb.org/t/p/w500/7oWY8VDWW7thTzWh3OKYRkWUlD5.jpg" alt="Django Unchained Poster" className="w-full h-full object-cover" />
+                  <Image src="https://image.tmdb.org/t/p/w500/7oWY8VDWW7thTzWh3OKYRkWUlD5.jpg" alt="Django Unchained Poster" fill className="object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                 </div>
                 <div className="absolute bottom-4 left-4 right-4 bg-black/80 backdrop-blur-md p-3 rounded border border-white/10 flex items-center justify-between">
@@ -218,7 +219,7 @@ export default function WatchlistPage() {
             {/* Floating thumbnails */}
             {floatingPosters.map((src, idx) => (
               <div key={src + idx} className={`absolute w-24 h-36 rounded-md overflow-hidden border border-white/10 shadow-xl animate-float`} style={{ top: `${(idx * 12) % 70 + 10}%`, left: `${(idx * 17) % 55 + 5}%`, animationDelay: `${idx * 0.4}s`, transform: `rotate(${(idx % 2 === 0 ? 1 : -1) * 3}deg)` }}>
-                <img src={src} alt="Poster" className="w-full h-full object-cover" />
+                <Image src={src} alt="Poster" fill className="object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
               </div>
             ))}
@@ -231,10 +232,10 @@ export default function WatchlistPage() {
                       <svg key={s} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
                     ))}
                   </div>
-                  <p className="text-sm font-serif italic text-gray-300">"Curated obsession transforms into cultural memory. Track with intent."</p>
+                  <p className="text-sm font-serif italic text-gray-300">&ldquo;Curated obsession transforms into cultural memory. Track with intent.&rdquo;</p>
                   <div className="mt-3 flex items-center gap-2"><div className="w-6 h-6 rounded-full bg-gray-600" /><span className="text-xs text-gray-400 uppercase tracking-wide">Editor</span></div>
                 </div>
-                <div className="bg-yellow-500 p-2 text-black text-xs font-bold text-center uppercase tracking-widest">Editor's Pick</div>
+                <div className="bg-yellow-500 p-2 text-black text-xs font-bold text-center uppercase tracking-widest">Editor&apos;s Pick</div>
               </div>
             </div>
           </div>
@@ -251,7 +252,7 @@ export default function WatchlistPage() {
               className={`group relative cursor-pointer rounded-lg overflow-hidden border border-white/10 bg-[#0f0f0f] shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 ${updateFeedback && updateFeedback.id === item.id ? (updateFeedback.type === 'success' ? 'ring-2 ring-green-500' : 'ring-2 ring-red-500') : ''}`}
             >
               <div className="relative aspect-[2/3]">
-                {item.imageUrl ? <img src={item.imageUrl} alt={item.title} className="absolute inset-0 w-full h-full object-cover" /> : <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-500">No Image</div>}
+                {item.imageUrl ? <Image src={item.imageUrl} alt={item.title} fill className="object-cover" /> : <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-500">No Image</div>}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <button
                   onClick={(e) => { e.stopPropagation(); handleRemove(item.id); }}

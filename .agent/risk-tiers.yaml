@@ -1,0 +1,79 @@
+# Risk Tier Configuration
+# Maps file paths and change types to risk levels for Streamline.
+
+paths:
+  low_risk:
+    - "*.md"
+    - "*.css"
+    - "docs/**"
+    - "tests/**"
+    - "*.test.*"
+    - "*.spec.*"
+    - ".agent/**"
+    - "LICENSE"
+
+  medium_risk:
+    - "src/app/components/**"
+    - "src/app/page.tsx"
+    - "src/app/layout.tsx"
+    - "src/app/*/page.tsx"
+    - "src/app/lib/**"
+    - "tailwind.config.ts"
+    - "postcss.config.mjs"
+    - "eslint.config.mjs"
+
+  high_risk:
+    - "src/app/api/auth/**"
+    - "src/app/api/watchlist/**"
+    - "next.config.ts"
+    - "tsconfig.json"
+    - "*.env*"
+    - "package.json"
+
+  blocked_without_permission:
+    - delete: never
+
+change_types:
+  low_risk:
+    - copy changes only
+    - CSS/styling only
+    - tests only
+    - internal refactor with passing differential tests
+
+  medium_risk:
+    - new UI feature
+    - new component
+    - new page route
+    - new API endpoint using existing patterns
+    - new test file
+    - dependency addition (non-security)
+
+  high_risk:
+    - auth changes
+    - API key handling changes
+    - image domain configuration
+    - production deployment config
+    - dependency changes with security implications
+
+  blocked_without_permission:
+    - deleting user data
+    - rotating secrets
+    - disabling tests
+    - weakening auth checks
+    - changing license
+
+review_requirements:
+  low_risk:
+    human_review: optional
+    debug_trace: optional
+    trace: required
+
+  medium_risk:
+    human_review: recommended
+    debug_trace: required if bug fix
+    trace: required
+
+  high_risk:
+    human_review: required
+    debug_trace: required
+    trace: required

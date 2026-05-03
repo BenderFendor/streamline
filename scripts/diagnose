@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# diagnose -- project-specific diagnostics for Streamline.
+set -euo pipefail
+
+echo "== Diagnose =="
+
+echo "--- Node version ---"
+node --version
+
+echo "--- npm version ---"
+npm --version
+
+echo "--- Installed packages ---"
+npm ls --depth=0 2>/dev/null || true
+
+echo "--- TypeScript check ---"
+npx tsc --noEmit --pretty 2>&1 | head -50 || true
+
+echo "--- Environment variables ---"
+echo "  NEXT_PUBLIC_TMDB_API_KEY: $(if [[ -n "${NEXT_PUBLIC_TMDB_API_KEY:-}" ]]; then echo "SET"; else echo "MISSING"; fi)"
+echo "  GITHUB_ID: $(if [[ -n "${GITHUB_ID:-}" ]]; then echo "SET"; else echo "MISSING"; fi)"
+echo "  GITHUB_SECRET: $(if [[ -n "${GITHUB_SECRET:-}" ]]; then echo "SET"; else echo "MISSING"; fi)"
+
+echo "--- Build check ---"
+npx next build --no-lint 2>&1 | tail -20 || true
+
+echo
+echo "== Diagnose complete =="

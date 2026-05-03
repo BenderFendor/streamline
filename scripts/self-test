@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# self-test -- single command to verify any patch.
+# Streamline: Next.js 15 + TypeScript + Tailwind CSS project.
+set -euo pipefail
+
+echo "== Self-test =="
+echo "Working directory: $(pwd)"
+echo
+
+if [[ ! -f package.json ]]; then
+  echo "ERROR: package.json not found. Run from project root."
+  exit 1
+fi
+
+echo "Detected Node/TypeScript project (npm)"
+echo
+
+echo "+ npm run lint"
+npm run lint
+echo
+
+echo "+ npx tsc --noEmit"
+npx tsc --noEmit
+echo
+
+echo "+ npm run build"
+npm run build
+echo
+
+echo "== Self-test passed =="

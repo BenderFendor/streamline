@@ -3,7 +3,7 @@ import type { WatchlistItem } from '@/app/lib/watchlist';
 import { getItemInfo } from '@/app/lib/watchlist';
 
 // In-memory storage for development
-export let watchlistItems: WatchlistItem[] = [];
+export const watchlistItems: WatchlistItem[] = [];
 
 // GET /api/watchlist
 export async function GET() {

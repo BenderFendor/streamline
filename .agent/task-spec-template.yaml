@@ -1,0 +1,45 @@
+# Task Spec -- Bounded specification for agent coding tasks.
+# Every coding task must use this format, not a free-text prompt.
+# Fields marked (required) must be filled before the agent starts.
+
+task_id: ""             # (required) unique identifier
+title: ""               # (required) short description
+status: "draft"         # draft | in_progress | done
+risk: "medium"          # low | medium | high (required)
+
+goal: ""                # (required) what must be accomplished
+non_goals:              # (required) what must NOT be changed
+  - ""
+
+allowed_files:          # (required) glob patterns the agent may touch
+  - ""
+
+forbidden_files:        # (required) paths the agent must not touch
+  - "src/app/api/auth/**"
+  - "next.config.ts"
+
+user_visible_behavior:  # what the user sees after this change
+  - ""
+
+data_model_changes:     # any schema, migration, or type changes
+  - ""
+
+api_contract_changes:   # any new/removed/changed endpoints or fields
+  - ""
+
+security_constraints:   # auth, permissions, data exposure rules
+  - ""
+
+performance_constraints: # latency, throughput, memory limits
+  - ""
+
+invariants:             # behaviors that must survive the patch
+  - ""
+
+acceptance:             # (required) executable acceptance criteria
+  - ""
+
+commands:               # (required) verification commands
+  - "bash scripts/self-test"
+
+rollback: ""            # (required) how to revert if this breaks

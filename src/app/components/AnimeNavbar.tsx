@@ -354,7 +354,7 @@ const AnimeNavbar: React.FC<AnimeNavbarProps> = ({
         {/* Search filter chip */}
         {filterValues.search && (
           <div className="flex items-center gap-2 bg-accent-secondary/10 text-accent-secondary px-3 py-1.5 rounded-full text-sm font-medium border border-accent-secondary/20 hover:bg-accent-secondary/15 transition-colors duration-300">
-            <span className="truncate max-w-[150px]">"{filterValues.search}"</span>
+            <span className="truncate max-w-[150px]">&quot;{filterValues.search}&quot;</span>
             <button
               onClick={onClearSearch}
               className="hover:text-white transition-colors duration-200"

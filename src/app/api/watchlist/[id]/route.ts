@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import type { WatchlistItem } from '@/app/lib/watchlist';
 
 // Import from parent route file
 import { watchlistItems } from '../route';
@@ -7,9 +6,9 @@ import { watchlistItems } from '../route';
 // GET /api/watchlist/[id]
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = params.id;
+  const { id } = await params;
   const item = watchlistItems.find(item => item.id === id);
   
   if (!item) {
@@ -22,10 +21,10 @@ export async function GET(
 // PATCH /api/watchlist/[id] - For updating progress, status, or rating
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = params.id;
+    const { id } = await params;
     const updates = await request.json();
     const item = watchlistItems.find(item => item.id === id);
 
@@ -46,9 +45,9 @@ export async function PATCH(
 // DELETE /api/watchlist/[id]
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = params.id;
+  const { id } = await params;
   const index = watchlistItems.findIndex(item => item.id === id);
 
   if (index === -1) {

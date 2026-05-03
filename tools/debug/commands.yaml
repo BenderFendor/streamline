@@ -1,0 +1,43 @@
+# Debug Command Registry
+# Streamline: Next.js 15 + TypeScript project.
+# Used by the debug skill to match scenarios to exact commands.
+
+next_dev_inspect:
+  command: "node --inspect-brk node_modules/.bin/next dev"
+  use_when: "server startup, middleware, or API route handling bug"
+
+next_build_trace:
+  command: "NODE_OPTIONS='--trace-warnings' npm run build 2>&1 | tail -100"
+  use_when: "build failures with unclear Next.js errors"
+
+tsc_trace:
+  command: "npx tsc --noEmit --pretty --extendedDiagnostics 2>&1 | head -100"
+  use_when: "TypeScript errors that are hard to locate"
+
+api_curl:
+  command: "curl -v {url} {headers}"
+  use_when: "debugging TMDB/AniList API responses or auth headers"
+
+next_log_verbose:
+  command: "NODE_OPTIONS='--inspect' npm run dev 2>&1"
+  use_when: "need to trace server-side data fetching or API route execution"
+
+browser_console:
+  command: "Open browser DevTools Console and Network tab. Reproduce the issue."
+  use_when: "client-side fetch error, state bug, or rendering issue"
+
+tailwind_check:
+  command: "npx tailwindcss -i src/app/globals.css --dry-run 2>&1 | head -50"
+  use_when: "Tailwind classes not applying or build warnings"
+
+env_check:
+  command: "node -e \"console.log('TMDB_KEY:', process.env.NEXT_PUBLIC_TMDB_API_KEY ? 'SET' : 'MISSING')\""
+  use_when: "API calls failing with 401/403"
+
+next_build_verbose:
+  command: "npm run build 2>&1 | tee /tmp/build.log"
+  use_when: "build succeeds but runtime fails with missing modules or env vars"
+
+node_repl_api:
+  command: "node -e \"const {fetchAnime} = require('./.next/server/app/lib/api.js'); ...\""
+  use_when: "isolating server-side API function behavior"
